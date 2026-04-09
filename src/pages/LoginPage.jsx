@@ -50,11 +50,11 @@ export default function LoginPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-12">
               <div>
-                <div className="text-tertiary-fixed text-3xl font-headline font-bold mb-1">99%</div>
+                <div className="text-tertiary-fixed text-3xl font-headline font-bold mb-1">95%</div>
                 <div className="text-white/60 text-sm font-medium">검출 정확도</div>
               </div>
               <div>
-                <div className="text-tertiary-fixed text-3xl font-headline font-bold mb-1">1s</div>
+                <div className="text-tertiary-fixed text-3xl font-headline font-bold mb-1">3s</div>
                 <div className="text-white/60 text-sm font-medium">실시간 판독 속도</div>
               </div>
             </div>

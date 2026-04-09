@@ -24,7 +24,7 @@ export default function Sidebar() {
   const userSub = role === "admin" ? "Authorized Personnel" : "Field Worker";
 
   return (
-    <aside className="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-[#1E3A5F] shadow-xl shadow-blue-900/20 z-50 flex flex-col justify-between p-4">
+    <aside className="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-[#1E3A5F] shadow-xl shadow-blue-900/20 z-50 hidden md:flex flex-col justify-between p-4">
       <div>
         {/* Logo */}
         <div className="mb-10 px-2 flex flex-col gap-1">

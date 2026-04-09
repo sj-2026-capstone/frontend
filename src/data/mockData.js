@@ -31,10 +31,10 @@ export const linePerformance = [
 
 // ── 실시간 모니터링 ──
 export const cameraFeeds = [
-  { id: "CAM-01", line: "A라인", status: "alarm",  image: "/parts/frame-sealing-defect.jpg",   time: "14:32:05", inspectionId: 247 },
-  { id: "CAM-02", line: "A라인", status: "normal", image: "/parts/frame-exterior-normal.jpg",  time: "14:32:05", inspectionId: null },
-  { id: "CAM-03", line: "A라인", status: "normal", image: "/parts/frame-hemming-normal.png",   time: "14:32:05", inspectionId: null },
-  { id: "CAM-04", line: "A라인", status: "normal", image: "/parts/frame-hole-normal.jpg",      time: "14:32:05", inspectionId: null },
+  { id: "CAM-01", line: "A라인", lineName: "A라인 조립", status: "alarm",  confidence: 94.2, fps: 30, image: "/parts/frame-sealing-defect.jpg",  time: "14:32:05", inspectionId: 247 },
+  { id: "CAM-02", line: "B라인", lineName: "B라인 용접", status: "normal", confidence: 99.8, fps: 30, image: "/parts/frame-exterior-normal.jpg", time: "14:32:05", inspectionId: null },
+  { id: "CAM-03", line: "B라인", lineName: "물류 이송",  status: "normal", confidence: 98.5, fps: 28, image: "/parts/frame-hemming-normal.png",  time: "14:32:05", inspectionId: null },
+  { id: "CAM-04", line: "C라인", lineName: "최종 검사",  status: "normal", confidence: 99.1, fps: 30, image: "/parts/frame-hole-normal.jpg",     time: "14:32:05", inspectionId: null },
 ];
 
 export const recentDetections = [

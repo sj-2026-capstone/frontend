@@ -66,7 +66,7 @@ export default function AiAnalysisPage() {
           {analysisPatterns.map((pat, i) => (
             <div
               key={i}
-              className={`group bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden flex border-l-4 ${pat.borderColor}`}
+              className="group bg-surface-container-lowest rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden flex"
             >
               <div className="p-6 flex-1">
                 <div className="flex justify-between items-start mb-3">
@@ -98,7 +98,7 @@ export default function AiAnalysisPage() {
           {analysisRecommendations.map((rec) => (
             <div
               key={rec.num}
-              className="relative bg-surface-container-lowest rounded-xl shadow-sm border-l-4 border-emerald-500 p-6 flex items-start gap-4"
+              className="relative bg-surface-container-lowest rounded-xl shadow-sm p-6 flex items-start gap-4"
             >
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
                 {rec.num}

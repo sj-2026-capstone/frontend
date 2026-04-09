@@ -108,22 +108,22 @@ export default function InspectionHistoryPage() {
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="bg-surface-container-low border-b border-surface-container-highest">
-                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">번호</th>
+                <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">번호</th>
                 <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">부품 ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">검사일시</th>
-                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">부품 종류</th>
+                <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">검사일시</th>
+                <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">부품 종류</th>
                 <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">판정 결과</th>
-                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">담당자</th>
+                <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">담당자</th>
                 <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider text-center">상세</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-container">
               {filtered.map((row) => (
                 <tr key={row.id} className="hover:bg-surface-container-low/50 transition-colors group">
-                  <td className="px-6 py-4 text-sm font-medium text-on-surface-variant">{row.id}</td>
+                  <td className="hidden md:table-cell px-6 py-4 text-sm font-medium text-on-surface-variant">{row.id}</td>
                   <td className="px-6 py-4 text-sm font-medium text-on-surface-variant">{row.partId}</td>
-                  <td className="px-6 py-4 text-sm">{row.date}</td>
-                  <td className="px-6 py-4 text-sm">{row.part}</td>
+                  <td className="hidden md:table-cell px-6 py-4 text-sm">{row.date}</td>
+                  <td className="hidden md:table-cell px-6 py-4 text-sm">{row.part}</td>
                   <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
@@ -137,7 +137,7 @@ export default function InspectionHistoryPage() {
                       {row.status === "defect" ? "불량" : row.status === "resolved" ? "조치 완료" : "정상"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm">{row.inspector}</td>
+                  <td className="hidden md:table-cell px-6 py-4 text-sm">{row.inspector}</td>
                   <td className="px-6 py-4 text-center">
                     {(row.status === "defect" || row.status === "resolved") && (
                       <button

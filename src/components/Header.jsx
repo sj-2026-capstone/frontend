@@ -13,14 +13,15 @@ const titles = {
 export default function Header() {
   const location = useLocation();
 
-  // /inspection/:id 같은 동적 경로 처리
   const title =
     titles[location.pathname] ||
     (location.pathname.startsWith("/inspection") ? "검사 결과 상세" : "");
 
   return (
-    <header className="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-white/70 backdrop-blur-md flex items-center justify-between px-8">
-      <h1 className="font-headline text-2xl font-bold tracking-tight text-[#1E3A5F]">
+    <header className="fixed top-0 right-0 w-full md:w-[calc(100%-16rem)] h-16 z-40 bg-gradient-to-b from-slate-100 to-slate-50 md:bg-white/70 md:backdrop-blur-md shadow-sm flex items-center justify-between px-4 md:px-8">
+      {/* 모바일: 빈 공간(좌측 균형용) / PC: 숨김 */}
+      <div className="w-10 md:hidden" />
+      <h1 className="font-headline text-lg md:text-2xl font-bold tracking-tight text-[#1E3A5F] md:text-left text-center flex-1 md:flex-none">
         {title}
       </h1>
 
@@ -31,11 +32,11 @@ export default function Header() {
           <span className="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border border-white" />
         </div>
 
-        {/* Settings */}
-        <Icon name="settings" className="cursor-pointer hover:opacity-70 transition-opacity" />
+        {/* Settings: PC만 */}
+        <Icon name="settings" className="hidden md:block cursor-pointer hover:opacity-70 transition-opacity" />
 
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full overflow-hidden border border-surface-container-high">
+        {/* Avatar: PC만 */}
+        <div className="hidden md:block w-8 h-8 rounded-full overflow-hidden border border-surface-container-high">
           <img
             className="w-full h-full object-cover"
             alt="관리자 아바타"

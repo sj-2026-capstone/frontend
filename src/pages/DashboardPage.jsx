@@ -17,9 +17,7 @@ export default function DashboardPage() {
         {kpiData.map((kpi) => (
           <div
             key={kpi.label}
-            className={`bg-surface-container-lowest p-6 rounded-lg shadow-sm ${
-              kpi.accent ? "border-l-4 border-error" : ""
-            }`}
+            className="bg-surface-container-lowest p-6 rounded-lg shadow-sm"
           >
             <div className="flex justify-between items-start mb-4">
               <span className="text-xs font-bold text-on-surface-variant font-label uppercase tracking-wider">

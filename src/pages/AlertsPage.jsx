@@ -56,10 +56,10 @@ export default function AlertsPage() {
           <div
             key={alert.id}
             onClick={() => toggleRead(alert.id)}
-            className={`group relative rounded-xl p-6 border-l-4 transition-all cursor-pointer ${
+            className={`group relative rounded-xl p-6 transition-all cursor-pointer ${
               alert.read
-                ? "bg-surface-container-low/50 border-outline-variant grayscale opacity-70"
-                : "bg-surface-container-lowest border-error shadow-sm hover:bg-white hover:shadow-md"
+                ? "bg-surface-container-low/50 grayscale opacity-70"
+                : "bg-surface-container-lowest shadow-sm hover:bg-white hover:shadow-md"
             }`}
           >
             <div className="flex justify-between items-start">
