@@ -146,7 +146,6 @@ export default function InspectionDetailPage() {
             { label: "감지 카메라", value: detail.cam },
             { label: "라인",       value: detail.line },
             { label: "캡처 시각",  value: inspection.date },
-            { label: "담당자",     value: inspection.inspector },
             { label: "불량 유형",  value: effectivelyDefect ? detail.defectType : "해당 없음" },
           ].map((item, i) => (
             <div

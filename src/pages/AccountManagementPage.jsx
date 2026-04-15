@@ -4,25 +4,12 @@ import { accountUsers } from "../data/mockData";
 
 export default function AccountManagementPage() {
   const [showPanel, setShowPanel] = useState(false);
-  const [users, setUsers] = useState(accountUsers);
-
-  const activeCount = users.filter((u) => u.status === "active").length;
-  const inactiveCount = users.filter((u) => u.status === "inactive").length;
-
-  const toggleStatus = (userId) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.userId === userId
-          ? { ...u, status: u.status === "active" ? "inactive" : "active" }
-          : u
-      )
-    );
-  };
+  const [users] = useState(accountUsers);
 
   return (
     <div className="space-y-8">
       {/* Summary Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 gap-6">
         <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center justify-between border-b-2 border-primary">
           <div>
             <p className="text-on-surface-variant text-sm font-medium mb-1">전체 계정</p>
@@ -32,36 +19,6 @@ export default function AccountManagementPage() {
           </div>
           <div className="w-12 h-12 bg-primary-container/10 rounded-lg flex items-center justify-center text-primary">
             <Icon name="group" className="text-3xl" />
-          </div>
-        </div>
-
-        <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center justify-between border-b-2 border-emerald-600">
-          <div>
-            <p className="text-on-surface-variant text-sm font-medium mb-1">활성 계정</p>
-            <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-extrabold text-primary font-headline">
-                {activeCount}<span className="text-lg font-medium ml-1">명</span>
-              </h2>
-              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" />
-            </div>
-          </div>
-          <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
-            <Icon name="how_to_reg" className="text-3xl" />
-          </div>
-        </div>
-
-        <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center justify-between border-b-2 border-slate-400">
-          <div>
-            <p className="text-on-surface-variant text-sm font-medium mb-1">비활성 계정</p>
-            <div className="flex items-center gap-2">
-              <h2 className="text-3xl font-extrabold text-primary font-headline">
-                {inactiveCount}<span className="text-lg font-medium ml-1">명</span>
-              </h2>
-              <span className="w-2.5 h-2.5 bg-slate-300 rounded-full" />
-            </div>
-          </div>
-          <div className="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400">
-            <Icon name="person_off" className="text-3xl" />
           </div>
         </div>
       </section>
@@ -76,18 +33,11 @@ export default function AccountManagementPage() {
             type="text"
           />
         </div>
-        <div className="flex gap-4">
-          <select className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm px-4 py-2.5 min-w-[120px]">
-            <option>상태: 전체</option>
-            <option>활성</option>
-            <option>비활성</option>
-          </select>
-          <select className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm px-4 py-2.5 min-w-[140px]">
-            <option>역할: 전체</option>
-            <option>현장 근로자</option>
-            <option>관리자</option>
-          </select>
-        </div>
+        <select className="bg-surface-container-lowest border-0 border-b-2 border-outline-variant focus:border-primary focus:ring-0 text-sm px-4 py-2.5 min-w-[140px]">
+          <option>역할: 전체</option>
+          <option>현장 근로자</option>
+          <option>관리자</option>
+        </select>
         <button
           className="bg-primary hover:bg-primary-container text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all font-semibold text-sm"
           onClick={() => setShowPanel(true)}
@@ -106,7 +56,6 @@ export default function AccountManagementPage() {
                 <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">이름</th>
                 <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">아이디</th>
                 <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">역할</th>
-                <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">상태</th>
                 <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">라인</th>
                 <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider">교대조</th>
                 <th className="px-6 py-4 text-xs font-bold text-on-surface-variant uppercase tracking-wider text-right">관리</th>
@@ -114,89 +63,35 @@ export default function AccountManagementPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {users.map((u) => (
-                <tr
-                  key={u.userId}
-                  className={`hover:bg-slate-50 transition-colors ${
-                    u.status === "inactive" ? "bg-slate-50/50" : ""
-                  }`}
-                >
-                  <td
-                    className={`px-6 py-4 font-semibold ${
-                      u.status === "inactive" ? "text-slate-400 line-through" : "text-on-surface"
-                    }`}
-                  >
-                    {u.name}
-                  </td>
-                  <td
-                    className={`px-6 py-4 text-sm ${
-                      u.status === "inactive" ? "text-slate-400 line-through" : "text-on-surface-variant"
-                    }`}
-                  >
-                    {u.userId}
-                  </td>
+                <tr key={u.userId} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-semibold text-on-surface">{u.name}</td>
+                  <td className="px-6 py-4 text-sm text-on-surface-variant">{u.userId}</td>
                   <td className="px-6 py-4 text-sm">
                     {u.role === "admin" ? (
                       <span className="bg-primary text-white px-2 py-1 rounded text-xs font-bold">
                         관리자
                       </span>
                     ) : (
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-bold ${
-                          u.status === "inactive"
-                            ? "bg-slate-200 text-slate-500"
-                            : "bg-slate-100 text-slate-700"
-                        }`}
-                      >
+                      <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded text-xs font-bold">
                         현장 근로자
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4">
-                    {u.status === "active" ? (
-                      <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-100 flex items-center w-fit gap-1.5">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                        활성
-                      </span>
-                    ) : (
-                      <span className="bg-slate-200 text-slate-500 px-3 py-1 rounded-full text-xs font-bold border border-slate-300 flex items-center w-fit gap-1.5">
-                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
-                        비활성
-                      </span>
-                    )}
-                  </td>
-                  <td
-                    className={`px-6 py-4 text-sm font-medium ${
-                      u.status === "inactive" ? "text-slate-400" : "text-on-surface-variant"
-                    }`}
-                  >
-                    {u.line}
-                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-on-surface-variant">{u.line}</td>
                   <td className="px-6 py-4 text-sm">
                     {u.shift === "-" ? (
                       <span className="text-slate-400">-</span>
                     ) : (
                       <span className={`px-2 py-1 rounded text-xs font-bold ${
-                        u.shift === "주간"
-                          ? u.status === "inactive" ? "bg-slate-100 text-slate-400" : "bg-amber-50 text-amber-700"
-                          : u.status === "inactive" ? "bg-slate-100 text-slate-400" : "bg-indigo-50 text-indigo-700"
+                        u.shift === "주간" ? "bg-amber-50 text-amber-700" : "bg-indigo-50 text-indigo-700"
                       }`}>
                         {u.shift}
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-right space-x-2">
+                  <td className="px-6 py-4 text-right">
                     <button className="text-primary hover:bg-primary/5 px-2 py-1 rounded text-xs font-bold">
                       편집
-                    </button>
-                    <button
-                      className={`hover:bg-opacity-5 px-2 py-1 rounded text-xs font-bold ${
-                        u.status === "active"
-                          ? "text-error hover:bg-error/5"
-                          : "text-primary hover:bg-primary/5"
-                      }`}
-                      onClick={() => toggleStatus(u.userId)}
-                    >
-                      {u.status === "active" ? "비활성화" : "활성화"}
                     </button>
                   </td>
                 </tr>

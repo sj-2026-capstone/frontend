@@ -62,25 +62,25 @@ export const recentDetections = [
 
 // ── 검사 이력 ──
 export const inspectionHistory = [
-  { id: 247, partId: "DOOR-0247", date: "2026.03.28 14:30", part: "도어", status: "defect",   confidence: 94.2, inspector: "김관리" },
-  { id: 246, partId: "BUMP-0246", date: "2026.03.28 14:15", part: "범퍼", status: "normal",   confidence: 98.1, inspector: "이검수" },
-  { id: 245, partId: "HEAD-0245", date: "2026.03.28 13:55", part: "헤드램프", status: "normal",   confidence: 96.5, inspector: "박공정" },
-  { id: 244, partId: "FRAM-0244", date: "2026.03.28 13:20", part: "프레임", status: "resolved", confidence: 87.5, inspector: "최품질" },
-  { id: 243, partId: "COWL-0243", date: "2026.03.28 11:45", part: "카울커버", status: "normal",   confidence: 99.2, inspector: "김관리" },
-  { id: 242, partId: "GRIL-0242", date: "2026.03.28 10:30", part: "라디에이터 그릴", status: "normal",   confidence: 97.8, inspector: "이검수" },
-  { id: 241, partId: "TAIL-0241", date: "2026.03.28 09:15", part: "테일 램프", status: "normal",   confidence: 95.4, inspector: "박공정" },
-  { id: 240, partId: "FEND-0240", date: "2026.03.27 17:40", part: "휀더", status: "resolved", confidence: 91.3, inspector: "최품질" },
+  { id: 247, partId: "DOOR-0247", date: "2026.03.28 14:30", part: "도어",           status: "defect",   confidence: 94.2 },
+  { id: 246, partId: "BUMP-0246", date: "2026.03.28 14:15", part: "범퍼",           status: "normal",   confidence: 98.1 },
+  { id: 245, partId: "HEAD-0245", date: "2026.03.28 13:55", part: "헤드램프",       status: "normal",   confidence: 96.5 },
+  { id: 244, partId: "FRAM-0244", date: "2026.03.28 13:20", part: "프레임",         status: "resolved", confidence: 87.5 },
+  { id: 243, partId: "COWL-0243", date: "2026.03.28 11:45", part: "카울커버",       status: "normal",   confidence: 99.2 },
+  { id: 242, partId: "GRIL-0242", date: "2026.03.28 10:30", part: "라디에이터 그릴", status: "normal",   confidence: 97.8 },
+  { id: 241, partId: "TAIL-0241", date: "2026.03.28 09:15", part: "테일 램프",      status: "normal",   confidence: 95.4 },
+  { id: 240, partId: "FEND-0240", date: "2026.03.27 17:40", part: "휀더",           status: "resolved", confidence: 91.3 },
 ];
 
 // ── 실시간 알림 ──
 export const alertsData = [
-  { id: 1, title: "불량 부품 감지", desc: "A라인 - 도어 스크래치 | 담당자: 김관리", time: "2분 전", read: false, inspectionId: 247 },
-  { id: 2, title: "불량 부품 감지", desc: "B라인 - 휀더 단차 | 담당자: 최품질", time: "15분 전", read: false, inspectionId: 240 },
-  { id: 3, title: "불량 부품 감지", desc: "A라인 - 프레임 헤밍 | 담당자: 최품질", time: "32분 전", read: false, inspectionId: 244 },
-  { id: 4, title: "불량 부품 감지", desc: "B라인 - 도어 외관손상 | 담당자: 이검수", time: "45분 전", read: false, inspectionId: null },
-  { id: 5, title: "불량 부품 감지", desc: "C라인 - 카울커버 고정핀 | 담당자: 박공정", time: "1시간 전", read: false, inspectionId: null },
-  { id: 6, title: "불량 부품 감지", desc: "C라인 - 커넥터 유격 | 담당자: 이검수", time: "2시간 전", read: true, inspectionId: null },
-  { id: 7, title: "불량 부품 감지", desc: "A라인 - 라디에이터 그릴 단차 | 담당자: 김관리", time: "33시간 전", read: true, inspectionId: null },
+  { id: 1, title: "불량 부품 감지", desc: "A라인 - 도어 스크래치", time: "2분 전", read: false, inspectionId: 247 },
+  { id: 2, title: "불량 부품 감지", desc: "B라인 - 휀더 단차", time: "15분 전", read: false, inspectionId: 240 },
+  { id: 3, title: "불량 부품 감지", desc: "A라인 - 프레임 헤밍", time: "32분 전", read: false, inspectionId: 244 },
+  { id: 4, title: "불량 부품 감지", desc: "B라인 - 도어 외관손상", time: "45분 전", read: false, inspectionId: null },
+  { id: 5, title: "불량 부품 감지", desc: "C라인 - 카울커버 고정핀", time: "1시간 전", read: false, inspectionId: null },
+  { id: 6, title: "불량 부품 감지", desc: "C라인 - 커넥터 유격", time: "2시간 전", read: true, inspectionId: null },
+  { id: 7, title: "불량 부품 감지", desc: "A라인 - 라디에이터 그릴 단차", time: "33시간 전", read: true, inspectionId: null },
 ];
 
 // ── AI 공정 분석 ──
@@ -181,12 +181,12 @@ export const inspectionDetails = {
 
 // ── 계정 관리 ──
 export const accountUsers = [
-  { name: "김철수", userId: "kimcs",  role: "worker", status: "active",   line: "A라인", shift: "주간" },
-  { name: "김소희", userId: "kimsh",  role: "worker", status: "active",   line: "B라인", shift: "야간" },
-  { name: "안용준", userId: "anyj",   role: "admin",  status: "active",   line: "-",    shift: "-"   },
-  { name: "진성훈", userId: "jinsh",  role: "worker", status: "active",   line: "C라인", shift: "주간" },
-  { name: "신동주", userId: "shindj", role: "worker", status: "active",   line: "A라인", shift: "야간" },
-  { name: "대풍근", userId: "daepg",  role: "worker", status: "active",   line: "B라인", shift: "주간" },
-  { name: "김은지", userId: "kimej",  role: "admin",  status: "active",   line: "-",    shift: "-"   },
-  { name: "김근호", userId: "kimgh",  role: "worker", status: "inactive", line: "C라인", shift: "야간" },
+  { name: "김철수", userId: "kimcs",  role: "worker", line: "A라인", shift: "주간" },
+  { name: "김소희", userId: "kimsh",  role: "worker", line: "B라인", shift: "야간" },
+  { name: "안용준", userId: "anyj",   role: "admin",  line: "-",    shift: "-"   },
+  { name: "진성훈", userId: "jinsh",  role: "worker", line: "C라인", shift: "주간" },
+  { name: "신동주", userId: "shindj", role: "worker", line: "A라인", shift: "야간" },
+  { name: "대풍근", userId: "daepg",  role: "worker", line: "B라인", shift: "주간" },
+  { name: "김은지", userId: "kimej",  role: "admin",  line: "-",    shift: "-"   },
+  { name: "김근호", userId: "kimgh",  role: "worker", line: "C라인", shift: "야간" },
 ];
