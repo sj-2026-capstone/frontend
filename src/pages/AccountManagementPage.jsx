@@ -1,13 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Icon from "../components/Icon";
+import { getAccounts, getAccountSummary } from "../api/accounts";
+import { USE_MOCK_API } from "../api/config";
+import { getLines } from "../api/lines";
+import { getShifts } from "../api/shifts";
+import { accountListResponseToUsers } from "../adapters/accounts";
 import { accountUsers } from "../data/mockData";
 
 export default function AccountManagementPage() {
   const [showPanel, setShowPanel] = useState(false);
-  const [users] = useState(accountUsers);
+  const [users, setUsers] = useState(accountUsers);
+  const [apiError, setApiError] = useState("");
+
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+
+    getAccounts({ page: 0, size: 20 })
+      .then((data) => {
+        if (!ignore) setUsers(accountListResponseToUsers(data));
+      })
+      .catch((err) => {
+        if (!ignore) setApiError(err.message);
+      });
+
+    Promise.allSettled([getAccountSummary(), getLines(), getShifts()]);
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-8">
+      {apiError && (
+        <div className="rounded-lg border border-error/20 bg-error/5 px-4 py-3 text-sm font-medium text-error">
+          {apiError}
+        </div>
+      )}
+
       {/* Summary Cards */}
       <section className="grid grid-cols-1 gap-6">
         <div className="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex items-center justify-between border-b-2 border-primary">

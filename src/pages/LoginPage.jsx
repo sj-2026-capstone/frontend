@@ -5,13 +5,29 @@ import Icon from "../components/Icon";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isMockApi } = useAuth();
   const [selectedRole, setSelectedRole] = useState("worker");
+  const [error, setError] = useState("");
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    login(selectedRole);
-    navigate(selectedRole === "admin" ? "/dashboard" : "/monitoring");
+    setError("");
+
+    try {
+      const formData = new FormData(e.currentTarget);
+      const auth = await login(
+        isMockApi
+          ? selectedRole
+          : {
+              loginId: formData.get("username"),
+              password: formData.get("password"),
+            }
+      );
+      const nextRole = auth?.role || selectedRole;
+      navigate(nextRole === "admin" ? "/dashboard" : "/monitoring");
+    } catch (err) {
+      setError(err.message || "로그인에 실패했습니다.");
+    }
   };
 
   return (
@@ -133,7 +149,7 @@ export default function LoginPage() {
               </div>
 
               {/* Role Selection */}
-              <div className="space-y-2">
+              {isMockApi && <div className="space-y-2">
                 <label className="text-sm font-semibold text-primary/80 ml-1">역할 선택</label>
                 <div className="flex gap-3">
                   <button
@@ -161,7 +177,7 @@ export default function LoginPage() {
                     관리자
                   </button>
                 </div>
-              </div>
+              </div>}
 
               {/* Remember me */}
               <div className="flex items-center justify-between pt-2">
@@ -177,6 +193,12 @@ export default function LoginPage() {
               </div>
 
               {/* Submit */}
+              {error && (
+                <div className="rounded-lg border border-error/20 bg-error/5 px-4 py-3 text-sm font-medium text-error">
+                  {error}
+                </div>
+              )}
+
               <button
                 className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-lg hover:shadow-lg hover:shadow-primary/20 transform active:scale-[0.98] transition-all duration-200"
                 type="submit"

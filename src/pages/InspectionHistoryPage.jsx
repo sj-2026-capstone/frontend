@@ -1,15 +1,37 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
+import { USE_MOCK_API } from "../api/config";
+import { getInspections } from "../api/inspections";
+import { inspectionListResponseToHistory } from "../adapters/inspections";
 import { inspectionHistory } from "../data/mockData";
 
 export default function InspectionHistoryPage() {
   const navigate = useNavigate();
+  const [rows, setRows] = useState(inspectionHistory);
+  const [apiError, setApiError] = useState("");
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+
+    getInspections({ page: 0, size: 20 })
+      .then((data) => {
+        if (!ignore) setRows(inspectionListResponseToHistory(data));
+      })
+      .catch((err) => {
+        if (!ignore) setApiError(err.message);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
   const [resultFilter, setResultFilter] = useState("전체");
   const [partFilter, setPartFilter] = useState("전체");
 
   const statusMap = { "불량": "defect", "정상": "normal", "조치 완료": "resolved" };
-  const filtered = inspectionHistory.filter((row) => {
+  const filtered = rows.filter((row) => {
     if (resultFilter !== "전체") {
       if (row.status !== statusMap[resultFilter]) return false;
     }
@@ -24,6 +46,12 @@ export default function InspectionHistoryPage() {
 
   return (
     <div className="space-y-6">
+      {apiError && (
+        <div className="rounded-lg border border-error/20 bg-error/5 px-4 py-3 text-sm font-medium text-error">
+          {apiError}
+        </div>
+      )}
+
       {/* Filter Bar */}
       <section className="bg-surface-container-lowest rounded-xl p-6 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-6 items-end">

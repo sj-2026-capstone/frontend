@@ -1,10 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Icon from "../components/Icon";
+import { USE_MOCK_API } from "../api/config";
+import { getNotifications, markNotificationRead } from "../api/notifications";
+import { notificationPageResponseToAlerts } from "../adapters/notifications";
 import { alertsData } from "../data/mockData";
 
 export default function AlertsPage() {
   const [tab, setTab] = useState("unread");
   const [alerts, setAlerts] = useState(alertsData);
+  const [apiError, setApiError] = useState("");
+
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+
+    getNotifications({ page: 0, size: 20 })
+      .then((data) => {
+        if (!ignore) setAlerts(notificationPageResponseToAlerts(data));
+      })
+      .catch((err) => {
+        if (!ignore) setApiError(err.message);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const unreadCount = alerts.filter((a) => !a.read).length;
 
@@ -14,7 +36,16 @@ export default function AlertsPage() {
     return true;
   });
 
-  const toggleRead = (id) => {
+  const toggleRead = async (id) => {
+    if (!USE_MOCK_API) {
+      try {
+        await markNotificationRead(id);
+      } catch (err) {
+        setApiError(err.message);
+        return;
+      }
+    }
+
     setAlerts((prev) =>
       prev.map((a) => (a.id === id ? { ...a, read: !a.read } : a))
     );
@@ -28,6 +59,12 @@ export default function AlertsPage() {
 
   return (
     <div className="relative">
+      {apiError && (
+        <div className="mb-6 rounded-lg border border-error/20 bg-error/5 px-4 py-3 text-sm font-medium text-error">
+          {apiError}
+        </div>
+      )}
+
       {/* Filter Tabs */}
       <div className="flex items-center gap-8 mb-10 border-b-2 border-surface-container">
         {tabs.map((t) => (

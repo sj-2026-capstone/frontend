@@ -12,9 +12,6 @@ const statusStyle = {
 export default function MonitoringPage() {
   const navigate = useNavigate();
 
-  const totalOk = recentDetections.filter((d) => d.status === "normal").length;
-  const totalNg = recentDetections.filter((d) => d.status === "defect").length;
-
   return (
     <div className="max-w-[1600px] mx-auto">
 

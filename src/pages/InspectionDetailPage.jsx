@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
+import { USE_MOCK_API } from "../api/config";
+import { getInspection } from "../api/inspections";
+import { inspectionResponseToDetail, inspectionResponseToHistoryRow } from "../adapters/inspections";
 import { inspectionHistory, inspectionDetails } from "../data/mockData";
 
 export default function InspectionDetailPage() {
@@ -8,9 +11,36 @@ export default function InspectionDetailPage() {
   const navigate = useNavigate();
   const [confirmed, setConfirmed] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [apiRecord, setApiRecord] = useState(null);
+  const [apiError, setApiError] = useState("");
 
-  const inspection = inspectionHistory.find((i) => i.id === parseInt(id));
-  const detail = inspectionDetails[parseInt(id)];
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+
+    getInspection(id)
+      .then((data) => {
+        if (!ignore) {
+          setApiRecord({
+            inspection: inspectionResponseToHistoryRow(data),
+            detail: inspectionResponseToDetail(data),
+          });
+        }
+      })
+      .catch((err) => {
+        if (!ignore) setApiError(err.message);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
+  const mockInspection = inspectionHistory.find((i) => i.id === parseInt(id));
+  const mockDetail = inspectionDetails[parseInt(id)];
+  const inspection = apiRecord?.inspection || mockInspection;
+  const detail = apiRecord?.detail || mockDetail;
 
   if (!inspection || !detail) {
     return (
@@ -31,10 +61,13 @@ export default function InspectionDetailPage() {
   const isResolved = inspection.status === "resolved" && !cancelled;
   const effectivelyDefect = isDefect || (inspection.status === "resolved" && cancelled);
 
-  const statusColor = effectivelyDefect ? "error" : isResolved ? "blue-600" : "green-600";
-
   return (
     <div className="max-w-3xl md:max-w-[1600px] mx-auto space-y-4 md:space-y-6">
+      {apiError && (
+        <div className="rounded-lg border border-error/20 bg-error/5 px-4 py-3 text-sm font-medium text-error">
+          {apiError}
+        </div>
+      )}
 
       {/* ── 소스 정보 배너 ── */}
       <div className="bg-surface-container-low rounded-xl px-4 py-3 flex items-center justify-between">
