@@ -1,20 +1,68 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Icon from "../components/Icon";
-import {
-  kpiData,
-  defectTrendData,
-  actionStatus,
-  linePerformance,
-} from "../data/mockData";
+import { USE_MOCK_API } from "../api/config";
+import { getDashboard } from "../api/dashboard";
+import { dashboardResponseToView, mockDashboardView } from "../adapters/dashboard";
+
+function buildTrendPoints(items) {
+  const width = 700;
+  const height = 200;
+  const max = Math.max(...items.map((item) => item.value), 10);
+  return items.map((item, index) => {
+    const x = items.length === 1 ? width / 2 : (width / (items.length - 1)) * index;
+    const y = height - (item.value / max) * (height - 30) - 15;
+    return [x, y];
+  });
+}
 
 export default function DashboardPage() {
   const [showAlert, setShowAlert] = useState(false);
+  const [dashboard, setDashboard] = useState(() => mockDashboardView());
+  const [apiError, setApiError] = useState("");
+
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+
+    getDashboard()
+      .then((data) => {
+        if (!ignore) setDashboard(dashboardResponseToView(data));
+      })
+      .catch((err) => {
+        if (!ignore) setApiError(err.message);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const trendPoints = useMemo(
+    () => buildTrendPoints(dashboard.defectTrendData),
+    [dashboard.defectTrendData]
+  );
+  const trendPath = trendPoints
+    .map(([x, y], index) => `${index === 0 ? "M" : "L"}${x},${y}`)
+    .join(" ");
+  const actionTotal = Math.max(dashboard.actionStatus.total, 1);
+  const actionCompletionRate = Math.round(
+    (dashboard.actionStatus.resolved / actionTotal) * 100
+  );
+  const lastUpdatedAt = dashboard.lastUpdatedAt
+    ? new Date(dashboard.lastUpdatedAt).toLocaleString()
+    : "2024.03.23 14:00";
 
   return (
     <>
+      {apiError && (
+        <div className="mb-6 rounded-lg border border-error/20 bg-error/5 px-4 py-3 text-sm font-medium text-error">
+          {apiError}
+        </div>
+      )}
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        {kpiData.map((kpi) => (
+        {dashboard.kpis.map((kpi) => (
           <div
             key={kpi.label}
             className="bg-surface-container-lowest p-6 rounded-lg shadow-sm"
@@ -102,24 +150,21 @@ export default function DashboardPage() {
             viewBox="0 0 700 200"
           >
             <path
-              d="M0,150 L100,120 L200,140 L300,80 L400,100 L500,90 L600,110 L700,70"
+              d={trendPath}
               fill="none"
               stroke="#1E3A5F"
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="4"
             />
-            {[
-              [0, 150], [100, 120], [200, 140], [300, 80],
-              [400, 100], [500, 90], [600, 110], [700, 70],
-            ].map(([cx, cy]) => (
+            {trendPoints.map(([cx, cy]) => (
               <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="4" fill="#1E3A5F" />
             ))}
           </svg>
 
           {/* Date labels */}
           <div className="absolute bottom-[-24px] w-full flex justify-between px-2 text-[10px] font-bold text-slate-400">
-            {defectTrendData.map((d) => (
+            {dashboard.defectTrendData.map((d) => (
               <span key={d.date}>{d.date}</span>
             ))}
           </div>
@@ -137,10 +182,10 @@ export default function DashboardPage() {
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">금일 기준 불량 조치 진행 현황</p>
             </div>
-            {actionStatus.pending > 0 && (
+            {dashboard.actionStatus.pending > 0 && (
               <span className="flex items-center gap-1 px-2.5 py-1 bg-error/10 text-error text-[11px] font-bold rounded-full">
                 <Icon name="warning" className="text-xs" />
-                미처리 {actionStatus.pending}건
+                미처리 {dashboard.actionStatus.pending}건
               </span>
             )}
           </div>
@@ -149,16 +194,16 @@ export default function DashboardPage() {
           <div className="mb-6">
             <div className="flex justify-between text-xs font-bold text-slate-400 mb-2">
               <span>전체 조치율</span>
-              <span className="text-primary">{Math.round((actionStatus.resolved / actionStatus.total) * 100)}%</span>
+              <span className="text-primary">{actionCompletionRate}%</span>
             </div>
             <div className="w-full h-3 bg-surface-container rounded-full overflow-hidden flex">
               <div
                 className="h-full bg-primary rounded-l-full transition-all"
-                style={{ width: `${(actionStatus.resolved / actionStatus.total) * 100}%` }}
+                style={{ width: `${(dashboard.actionStatus.resolved / actionTotal) * 100}%` }}
               />
               <div
                 className="h-full bg-blue-300"
-                style={{ width: `${(actionStatus.inProgress / actionStatus.total) * 100}%` }}
+                style={{ width: `${(dashboard.actionStatus.inProgress / actionTotal) * 100}%` }}
               />
             </div>
             <div className="flex gap-4 mt-2 text-[10px] font-bold text-slate-400">
@@ -172,17 +217,17 @@ export default function DashboardPage() {
           <div className="grid grid-cols-3 gap-4 mt-auto">
             <div className="bg-error/5 border border-error/20 rounded-xl p-4 text-center">
               <Icon name="report" className="text-error text-2xl mb-1" />
-              <div className="font-headline text-2xl font-extrabold text-error">{actionStatus.pending}</div>
+              <div className="font-headline text-2xl font-extrabold text-error">{dashboard.actionStatus.pending}</div>
               <div className="text-[11px] font-bold text-error/70 mt-0.5">미처리</div>
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
               <Icon name="engineering" className="text-blue-500 text-2xl mb-1" />
-              <div className="font-headline text-2xl font-extrabold text-blue-600">{actionStatus.inProgress}</div>
+              <div className="font-headline text-2xl font-extrabold text-blue-600">{dashboard.actionStatus.inProgress}</div>
               <div className="text-[11px] font-bold text-blue-400 mt-0.5">조치 중</div>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
               <Icon name="check_circle" className="text-green-600 text-2xl mb-1" />
-              <div className="font-headline text-2xl font-extrabold text-green-600">{actionStatus.resolved}</div>
+              <div className="font-headline text-2xl font-extrabold text-green-600">{dashboard.actionStatus.resolved}</div>
               <div className="text-[11px] font-bold text-green-500 mt-0.5">조치 완료</div>
             </div>
           </div>
@@ -194,7 +239,7 @@ export default function DashboardPage() {
             라인별 불량률
           </h3>
           <div className="flex flex-col gap-8">
-            {linePerformance.map((lp) => (
+            {dashboard.linePerformance.map((lp) => (
               <div key={lp.line} className="flex flex-col gap-2">
                 <div className="flex justify-between items-center px-1">
                   <span className="text-sm font-bold text-primary">{lp.line}</span>
@@ -215,7 +260,7 @@ export default function DashboardPage() {
       {/* ── Footer Meta ── */}
       <footer className="mt-12 pt-8 border-t border-surface-container flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
         <div>AI Factory Quality System v2.4.0</div>
-        <div>Last Updated: 2024.03.23 14:00</div>
+        <div>Last Updated: {lastUpdatedAt}</div>
       </footer>
 
       {/* ── Alert Toast ── */}
