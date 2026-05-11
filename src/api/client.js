@@ -15,6 +15,10 @@ function createApiError(message, details = {}) {
   return error;
 }
 
+function createApiUrl(path) {
+  return `${API_BASE_URL.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+}
+
 export async function apiRequest(path, options = {}) {
   const headers = new Headers(options.headers || {});
   const token = getAccessToken();
@@ -23,13 +27,15 @@ export async function apiRequest(path, options = {}) {
     headers.set("Content-Type", "application/json");
   }
 
+  headers.set("ngrok-skip-browser-warning", "true");
+
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(createApiUrl(path), {
       ...options,
       headers,
     });
