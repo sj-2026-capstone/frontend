@@ -1,4 +1,11 @@
 // ── 대시보드 ──
+export const mockFactoryLines = [
+  { id: "A", name: "A 라인", status: "alarm", inspectionId: 247, defectCount: 3, lastEventAt: "14:32:05" },
+  { id: "B", name: "B 라인", status: "normal", inspectionId: null, defectCount: 0, lastEventAt: "14:31:50" },
+  { id: "C", name: "C 라인", status: "wait", inspectionId: null, defectCount: 0, lastEventAt: "14:30:58" },
+  { id: "D", name: "D 라인", status: "normal", inspectionId: null, defectCount: 0, lastEventAt: "14:29:44" },
+];
+
 export const kpiData = [
   { label: "총 검사 수", value: "1,247", change: "12%", changeDir: "up", sub: "vs 지난주 대비", icon: "fact_check", accent: false },
   { label: "불량률", value: "4.2%", change: "0.8%", changeDir: "down", sub: "공정 안정성 향상", icon: "error_outline", accent: false },

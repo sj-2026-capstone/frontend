@@ -65,6 +65,29 @@ body {
   animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+@keyframes factory-line-pulse {
+  0%, 100% { opacity: 0.52; }
+  50% { opacity: 1; }
+}
+.factory-line-pulse {
+  animation: factory-line-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes factory-alarm-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.65; }
+}
+.factory-alarm-dot {
+  animation: factory-alarm-dot 1.2s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.factory-line-clickable:focus-visible {
+  outline: 3px solid #ba1a1a;
+  outline-offset: 6px;
+}
+
 /* 스크롤바 숨김 */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
