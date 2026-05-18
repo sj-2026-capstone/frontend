@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import FactoryFloorMap from "../components/FactoryFloorMap";
 import { USE_MOCK_API } from "../api/config";
 import { getLines } from "../api/lines";
-import { linesResponseToFactoryLines, mockFactoryLineView } from "../adapters/lines";
+import { subscribeNotifications } from "../api/notifications";
+import { applyLineAlarmNotification, linesResponseToFactoryLines, mockFactoryLineView } from "../adapters/lines";
 import { recentDetections } from "../data/mockData";
 
 const statusCopy = {
@@ -115,7 +116,12 @@ function DetectionStrip() {
 export default function MonitoringPage() {
   const navigate = useNavigate();
   const [lines, setLines] = useState(() => mockFactoryLineView());
+  const linesRef = useRef(lines);
   const [apiError, setApiError] = useState("");
+
+  useEffect(() => {
+    linesRef.current = lines;
+  }, [lines]);
 
   useEffect(() => {
     if (USE_MOCK_API) return;
@@ -135,6 +141,49 @@ export default function MonitoringPage() {
 
     return () => {
       ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+
+    const syncLines = () => {
+      getLines()
+        .then((data) => {
+          if (ignore) return;
+          const nextLines = linesResponseToFactoryLines(data);
+          linesRef.current = nextLines;
+          setLines(nextLines);
+        })
+        .catch((err) => {
+          if (!ignore) setApiError(err.message);
+        });
+    };
+
+    const source = subscribeNotifications(
+      (notification) => {
+        const result = applyLineAlarmNotification(linesRef.current, notification);
+
+        if (result.ignored) return;
+
+        if (result.matched) {
+          linesRef.current = result.lines;
+          setLines(result.lines);
+          return;
+        }
+
+        syncLines();
+      },
+      () => {
+        if (!ignore) setApiError("실시간 알림 연결이 끊겼습니다. 재연결을 시도합니다.");
+      }
+    );
+
+    return () => {
+      ignore = true;
+      source.close();
     };
   }, []);
 
