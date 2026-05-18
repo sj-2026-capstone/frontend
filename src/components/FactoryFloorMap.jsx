@@ -373,6 +373,7 @@ function LineBelt({ line, onSelect }) {
 }
 
 export default function FactoryFloorMap({ lines, onLineSelect }) {
+  const hasAlarm = lines.some((line) => line.status === "alarm");
   const orderedLines = [...lines].sort((a, b) => {
     const aCode = getLineCode(a);
     const bCode = getLineCode(b);
@@ -380,9 +381,15 @@ export default function FactoryFloorMap({ lines, onLineSelect }) {
   });
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-outline-variant/30 bg-[#e7eef3] shadow-sm">
+    <div
+      className={`relative overflow-hidden rounded-xl border bg-[#e7eef3] shadow-sm ${
+        hasAlarm
+          ? "border-error ring-4 ring-error/20 active-pulse"
+          : "border-outline-variant/30"
+      }`}
+    >
       <svg
-        className="block h-full min-h-[420px] w-full md:min-h-[720px]"
+        className="block h-full min-h-[360px] w-full md:min-h-[560px] xl:min-h-[620px]"
         viewBox="0 0 1180 720"
         role="img"
         aria-label="공장 라인 모니터링 도면"

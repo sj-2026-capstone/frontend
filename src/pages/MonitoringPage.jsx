@@ -8,69 +8,31 @@ import { subscribeNotifications } from "../api/notifications";
 import { applyLineAlarmNotification, linesResponseToFactoryLines, mockFactoryLineView } from "../adapters/lines";
 import { recentDetections } from "../data/mockData";
 
-const statusCopy = {
-  alarm: {
-    label: "불량",
-    tone: "border-error/30 bg-error/5 text-error",
-    dot: "bg-error",
-    icon: "warning",
-  },
-  normal: {
-    label: "정상",
-    tone: "border-green-200 bg-green-50 text-green-700",
-    dot: "bg-green-500",
-    icon: "check_circle",
-  },
-  wait: {
-    label: "대기",
-    tone: "border-amber-200 bg-amber-50 text-amber-700",
-    dot: "bg-amber-500",
-    icon: "build",
-  },
-};
+function isDefectDetection(det) {
+  const status = String(det.status || "").toLowerCase();
+  return ["defect", "alarm", "ng", "fail", "failed"].some((token) => status.includes(token));
+}
 
-function LineStatusCard({ line, onSelect }) {
-  const copy = statusCopy[line.status] || statusCopy.normal;
-  const isClickable = line.status === "alarm" && line.inspectionId;
+function detectionTimeValue(det) {
+  const raw = String(det.detectedAt || det.createdAt || det.time || "");
+  const parsed = Date.parse(raw);
+  if (!Number.isNaN(parsed)) return parsed;
 
-  return (
-    <button
-      type="button"
-      className={`w-full rounded-lg border p-2.5 text-left shadow-sm transition-all ${
-        copy.tone
-      } ${isClickable ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md" : "cursor-default"}`}
-      onClick={() => isClickable && onSelect(line)}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-70">생산 라인</p>
-          <h3 className="mt-0.5 font-headline text-base font-extrabold tracking-tight text-on-surface">
-            {line.name}
-          </h3>
-        </div>
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-white/80">
-          <Icon name={copy.icon} fill={line.status === "alarm"} className="text-base" />
-        </div>
-      </div>
-      <div className="mt-3 flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-2 py-0.5 text-[11px] font-black">
-          <span className={`h-1.5 w-1.5 rounded-full ${copy.dot} ${line.status === "alarm" ? "animate-pulse" : ""}`} />
-          {copy.label}
-        </span>
-        <span className="text-[11px] font-bold opacity-80">
-          불량 {line.defectCount}건
-        </span>
-      </div>
-      <p className="mt-2 text-[11px] font-semibold opacity-70">
-        최근 이벤트: {line.lastEventAt || "-"}
-      </p>
-    </button>
-  );
+  const match = raw.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (!match) return 0;
+
+  const [, hour, minute, second = "0"] = match;
+  return Number(hour) * 3600 + Number(minute) * 60 + Number(second);
 }
 
 function DetectionStrip() {
+  const defectDetections = recentDetections
+    .filter(isDefectDetection)
+    .sort((a, b) => detectionTimeValue(b) - detectionTimeValue(a))
+    .slice(0, 5);
+
   return (
-    <section className="rounded-xl bg-surface-container-lowest p-5 shadow-sm">
+    <section className="rounded-xl bg-surface-container-lowest p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-primary">
           <Icon name="analytics" className="text-base" />
@@ -78,28 +40,24 @@ function DetectionStrip() {
         </h2>
         <span className="text-[11px] font-bold text-on-surface-variant">실시간</span>
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-1 no-scrollbar">
-        {recentDetections.map((det, index) => (
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+        {defectDetections.map((det, index) => (
           <div
             key={`${det.time}-${index}`}
-            className="min-w-[250px] rounded-lg border border-outline-variant/20 bg-white p-3 shadow-sm"
+            className="rounded-lg border border-outline-variant/20 bg-white p-3 shadow-sm"
           >
             <div className="flex items-center gap-3">
-              <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-highest">
+              <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-highest">
                 <img className="h-full w-full object-cover" src={det.image} alt={det.part} />
-                {det.status === "defect" && <div className="absolute inset-0 bg-error/15" />}
+                <div className="absolute inset-0 bg-error/15" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="truncate text-[11px] font-bold text-on-surface-variant">
                     {det.time} | {det.cam}
                   </span>
-                  <span
-                    className={`rounded px-1.5 py-0.5 text-[10px] font-black ${
-                      det.status === "defect" ? "bg-error/10 text-error" : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {det.status === "defect" ? "불량" : "정상"}
+                  <span className="rounded bg-error/10 px-1.5 py-0.5 text-[10px] font-black text-error">
+                    불량
                   </span>
                 </div>
                 <p className="truncate text-sm font-extrabold text-on-surface">{det.part}</p>
@@ -108,6 +66,11 @@ function DetectionStrip() {
             </div>
           </div>
         ))}
+        {!defectDetections.length && (
+          <div className="rounded-lg border border-dashed border-outline-variant/40 bg-white/70 p-4 text-center text-xs font-bold text-on-surface-variant">
+            최근 불량 감지 내역이 없습니다.
+          </div>
+        )}
       </div>
     </section>
   );
@@ -201,17 +164,10 @@ export default function MonitoringPage() {
         </div>
       )}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <FactoryFloorMap lines={lines} onLineSelect={handleLineSelect} />
-
-        <aside className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
-          {lines.map((line) => (
-            <LineStatusCard key={line.id} line={line} onSelect={handleLineSelect} />
-          ))}
-        </aside>
+        <DetectionStrip />
       </section>
-
-      <DetectionStrip />
     </div>
   );
 }
