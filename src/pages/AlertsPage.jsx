@@ -1,13 +1,36 @@
 import { useEffect, useState } from "react";
 import Icon from "../components/Icon";
 import { USE_MOCK_API } from "../api/config";
-import { getNotifications, markNotificationRead } from "../api/notifications";
+import {
+  getNotifications,
+  getUnreadCount,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from "../api/notifications";
 import { notificationPageResponseToAlerts } from "../adapters/notifications";
 import { alertsData } from "../data/mockData";
+
+const PAGE_SIZE = 20;
+
+function notificationParamsForTab(tab) {
+  const params = { page: 0, size: PAGE_SIZE };
+
+  if (tab === "unread") params.read = false;
+  if (tab === "read") params.read = true;
+
+  return params;
+}
+
+function normalizeUnreadCount(response) {
+  return Number(response?.count ?? response?.unreadCount ?? response ?? 0) || 0;
+}
 
 export default function AlertsPage() {
   const [tab, setTab] = useState("unread");
   const [alerts, setAlerts] = useState(() => (USE_MOCK_API ? alertsData : []));
+  const [unreadCount, setUnreadCount] = useState(() =>
+    USE_MOCK_API ? alertsData.filter((a) => !a.read).length : 0
+  );
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {
@@ -15,28 +38,46 @@ export default function AlertsPage() {
 
     let ignore = false;
 
-    getNotifications({ page: 0, size: 20 })
-      .then((data) => {
-        if (!ignore) setAlerts(notificationPageResponseToAlerts(data));
-      })
-      .catch((err) => {
-        if (!ignore) setApiError(err.message);
-      });
+    async function loadNotifications() {
+      const [notificationsResult, unreadCountResult] = await Promise.allSettled([
+        getNotifications(notificationParamsForTab(tab)),
+        getUnreadCount(),
+      ]);
+
+      if (ignore) return;
+
+      if (notificationsResult.status === "fulfilled") {
+        setAlerts(notificationPageResponseToAlerts(notificationsResult.value));
+        setApiError("");
+      } else {
+        setAlerts([]);
+        setApiError(notificationsResult.reason.message);
+      }
+
+      if (unreadCountResult.status === "fulfilled") {
+        setUnreadCount(normalizeUnreadCount(unreadCountResult.value));
+      }
+    }
+
+    loadNotifications();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [tab]);
 
-  const unreadCount = alerts.filter((a) => !a.read).length;
-
-  const filtered = alerts.filter((a) => {
-    if (tab === "unread") return !a.read;
-    if (tab === "read") return a.read;
-    return true;
-  });
+  const filtered = USE_MOCK_API
+    ? alerts.filter((a) => {
+        if (tab === "unread") return !a.read;
+        if (tab === "read") return a.read;
+        return true;
+      })
+    : alerts;
 
   const toggleRead = async (id) => {
+    const target = alerts.find((alert) => alert.id === id);
+    if (!target || target.read) return;
+
     if (!USE_MOCK_API) {
       try {
         await markNotificationRead(id);
@@ -47,8 +88,29 @@ export default function AlertsPage() {
     }
 
     setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, read: !a.read } : a))
+      tab === "unread"
+        ? prev.filter((a) => a.id !== id)
+        : prev.map((a) => (a.id === id ? { ...a, read: true } : a))
     );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+  };
+
+  const markAllRead = async () => {
+    if (unreadCount === 0) return;
+
+    if (!USE_MOCK_API) {
+      try {
+        await markAllNotificationsRead();
+      } catch (err) {
+        setApiError(err.message);
+        return;
+      }
+    }
+
+    setAlerts((prev) =>
+      tab === "unread" ? [] : prev.map((alert) => ({ ...alert, read: true }))
+    );
+    setUnreadCount(0);
   };
 
   const tabs = [
@@ -66,25 +128,37 @@ export default function AlertsPage() {
       )}
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-8 mb-10 border-b-2 border-surface-container">
-        {tabs.map((t) => (
+      <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border-b-2 border-surface-container">
+        <div className="flex items-center gap-8">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`pb-4 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                tab === t.key
+                  ? "font-bold text-primary border-b-2 border-primary"
+                  : "text-slate-500 hover:text-primary"
+              }`}
+            >
+              {t.label}
+              {t.badge > 0 && (
+                <span className="bg-error text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  {t.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        {unreadCount > 0 && (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`pb-4 text-sm font-medium transition-colors relative flex items-center gap-2 ${
-              tab === t.key
-                ? "font-bold text-primary border-b-2 border-primary"
-                : "text-slate-500 hover:text-primary"
-            }`}
+            aria-label="Mark all notifications as read"
+            className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-surface-container-high text-primary transition-colors hover:bg-surface-container-highest"
+            onClick={markAllRead}
+            type="button"
           >
-            {t.label}
-            {t.badge > 0 && (
-              <span className="bg-error text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                {t.badge}
-              </span>
-            )}
+            <Icon name="done_all" className="text-lg" />
           </button>
-        ))}
+        )}
       </div>
 
       {/* Alerts List */}

@@ -112,22 +112,6 @@ export default function InspectionDetailPage() {
                 alt="Grad-CAM 분석 이미지"
                 className="w-full h-full object-cover"
               />
-              {(effectivelyDefect || isResolved) && (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-tr from-error/40 via-secondary-container/20 to-transparent pointer-events-none" />
-                  <div className="absolute top-[45%] left-[60%] -translate-x-1/2 -translate-y-1/2">
-                    <div className="relative">
-                      <div className="absolute inset-0 w-24 h-24 border-2 border-white/50 rounded-full animate-ping" />
-                      <div className="w-12 h-12 border-4 border-white rounded-full flex items-center justify-center">
-                        <span className="w-2 h-2 bg-white rounded-full" />
-                      </div>
-                      <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded shadow-lg text-xs font-bold text-error whitespace-nowrap">
-                        결함 검출 영역
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
           </div>
         </div>
       </div>

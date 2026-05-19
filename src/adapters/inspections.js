@@ -78,8 +78,10 @@ export function inspectionResponseToDetail(item) {
     result.originalImageUrl ||
     result.imageUrl;
   const gradcamImage =
+    item.gradCamImageUrl ||
     item.gradcamImageUrl ||
     item.resultImageUrl ||
+    result.gradCamImageUrl ||
     result.gradcamImageUrl ||
     result.resultImageUrl ||
     result.heatmapImageUrl ||

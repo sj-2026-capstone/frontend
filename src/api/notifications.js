@@ -66,7 +66,10 @@ export function subscribeNotifications(onNotification, onError) {
 
   const connect = async () => {
     controller = new AbortController();
-    const headers = new Headers({ "ngrok-skip-browser-warning": "true" });
+    const headers = new Headers({
+      Accept: "text/event-stream",
+      "ngrok-skip-browser-warning": "true",
+    });
     const token = getAccessToken();
 
     if (token) {
