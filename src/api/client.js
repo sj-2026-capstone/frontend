@@ -57,6 +57,35 @@ export async function apiRequest(path, options = {}) {
   return payload?.data ?? null;
 }
 
+export async function apiBlobRequest(url, options = {}) {
+  const headers = new Headers(options.headers || {});
+  const token = getAccessToken();
+
+  headers.set("ngrok-skip-browser-warning", "true");
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  let response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (cause) {
+    throw createApiError("Backend image request failed.", { cause });
+  }
+
+  if (!response.ok) {
+    throw createApiError("Backend image request failed.", {
+      status: response.status,
+    });
+  }
+
+  return response.blob();
+}
+
 export function toQuery(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {

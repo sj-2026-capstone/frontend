@@ -17,14 +17,6 @@ const STATUS_OPTIONS = [
   { value: "FAILED", label: "실패" },
 ];
 
-const STATUS_LABELS = {
-  defect: "불량",
-  normal: "정상",
-  pending: "대기",
-  processing: "분석중",
-  failed: "실패",
-};
-
 export default function InspectionHistoryPage() {
   const navigate = useNavigate();
   const [rows, setRows] = useState(() => (USE_MOCK_API ? inspectionHistory : []));
@@ -175,7 +167,7 @@ export default function InspectionHistoryPage() {
                 <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">검사 시각</th>
                 <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">라인</th>
                 <th className="hidden md:table-cell px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">결과</th>
-                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">상태</th>
+                <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">조치 유무</th>
                 <th className="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider text-center">상세</th>
               </tr>
             </thead>
@@ -186,11 +178,17 @@ export default function InspectionHistoryPage() {
                   <td className="px-6 py-4 text-sm font-medium text-on-surface-variant">{row.partId}</td>
                   <td className="hidden md:table-cell px-6 py-4 text-sm">{formatDate(row.date)}</td>
                   <td className="hidden md:table-cell px-6 py-4 text-sm">{row.line}</td>
-                  <td className="hidden md:table-cell px-6 py-4 text-sm">{row.part}</td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${statusClassName(row.status)}`}>
-                      {STATUS_LABELS[row.status] || row.rawStatus || row.status}
+                  <td className="hidden md:table-cell px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${resultClassName(row.status)}`}>
+                      {resultLabel(row.status)}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {actionStatusLabel(row.status) && (
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${actionStatusClassName(row.status)}`}>
+                        {actionStatusLabel(row.status)}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <button
@@ -277,11 +275,28 @@ function lineResponseToOptions(response) {
     .filter(Boolean);
 }
 
-function statusClassName(status) {
-  if (status === "defect" || status === "failed") return "bg-error-container text-on-error-container";
-  if (status === "processing") return "bg-blue-100 text-blue-700";
-  if (status === "pending") return "bg-amber-100 text-amber-700";
-  return "bg-green-100 text-green-700";
+function resultLabel(status) {
+  if (status === "defect" || status === "resolved") return "불량";
+  if (status === "normal") return "정상";
+  return "-";
+}
+
+function resultClassName(status) {
+  if (status === "defect" || status === "resolved") return "bg-error-container text-on-error-container";
+  if (status === "normal") return "bg-green-100 text-green-700";
+  return "bg-surface-container-high text-on-surface-variant";
+}
+
+function actionStatusLabel(status) {
+  if (status === "defect") return "미처리";
+  if (status === "resolved") return "조치완료";
+  return "";
+}
+
+function actionStatusClassName(status) {
+  return status === "defect"
+    ? "bg-error-container text-on-error-container"
+    : "bg-green-100 text-green-700";
 }
 
 function formatDate(value) {

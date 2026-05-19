@@ -52,8 +52,7 @@ export function inspectionPageResponseToHistoryPage(response, fallback = {}) {
 
 export function inspectionResponseToHistoryRow(item) {
   const inspectionId = item.inspectionId ?? item.id;
-  const result = getInspectionResult(item);
-  const defectType = item.defectDisplayName || result.defectDisplayName || formatDefectType(item.defectType || result.defectType);
+  const status = mapInspectionStatus(item);
   const line = item.lineName || item.lineCode || item.lineId || "-";
 
   return {
@@ -61,15 +60,14 @@ export function inspectionResponseToHistoryRow(item) {
     partId: item.partId || item.partCode || `INSP-${inspectionId ?? "-"}`,
     date: item.inspectedAt || item.completedAt || item.updatedAt || item.createdAt || "-",
     line,
-    part: defectType || "정상",
-    status: mapInspectionStatus(item),
+    part: status === "defect" || status === "failed" ? "불량" : "정상",
+    status,
     rawStatus: item.status || "-",
   };
 }
 
 export function inspectionResponseToDetail(item) {
   const result = getInspectionResult(item);
-  const defectType = item.defectDisplayName || result.defectDisplayName || formatDefectType(item.defectType || result.defectType);
   const originalImage =
     item.originalImageUrl ||
     item.imageUrl ||
@@ -89,8 +87,23 @@ export function inspectionResponseToDetail(item) {
   return {
     cam: item.cameraId || item.cameraName || item.deviceId || "-",
     line: item.lineName || item.lineCode || "-",
+    shift: pickText(item.shiftName, item.shift?.shiftName, item.shift?.name, result.shiftName, result.shift?.shiftName, result.shift?.name) || "-",
+    workerName:
+      pickText(
+        item.workerName,
+        item.operatorName,
+        item.inspectorName,
+        item.userName,
+        item.worker?.userName,
+        item.worker?.name,
+        item.user?.userName,
+        item.user?.name,
+        result.workerName,
+        result.operatorName,
+        result.inspectorName,
+        result.userName
+      ) || "-",
     detectionMethod: "Backend API",
-    defectType,
     originalImage: resolveBackendImageUrl(originalImage) || "/parts/frame-normal.png",
     gradcamImage: resolveBackendImageUrl(gradcamImage) || "/parts/frame-normal.png",
   };
@@ -128,10 +141,7 @@ function getInspectionItems(response) {
 function mapInspectionStatus(item) {
   const status = String(item.status || "").toUpperCase();
   const result = getInspectionResult(item);
-  const hasDefect =
-    item.hasDefect === true ||
-    result.hasDefect === true ||
-    Boolean(item.defectType || result.defectType);
+  const hasDefect = item.hasDefect === true || result.hasDefect === true;
 
   if (status === "DONE" && hasDefect) return "defect";
   if (status === "DONE") return "normal";
@@ -145,17 +155,7 @@ function getInspectionResult(item) {
   return item.result || item.analysisResult || item.inspectionResult || item.frameResult || item.aiResult || {};
 }
 
-function formatDefectType(value) {
-  if (!value) return null;
-
-  const labels = {
-    SCRATCH: "스크래치",
-    DENT: "찌그러짐",
-    CRACK: "균열",
-    CONTAMINATION: "오염",
-    MISSING_PART: "부품 누락",
-    DIMENSION_ERROR: "치수 오류",
-  };
-  const key = String(value).toUpperCase();
-  return labels[key] || value;
+function pickText(...values) {
+  const value = values.find((item) => typeof item === "string" && item.trim());
+  return value?.trim() || null;
 }

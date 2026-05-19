@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
-import { USE_MOCK_API } from "../api/config";
+import { API_BASE_URL, USE_MOCK_API } from "../api/config";
+import { apiBlobRequest } from "../api/client";
 import { getInspection } from "../api/inspections";
 import { inspectionResponseToDetail, inspectionResponseToHistoryRow } from "../adapters/inspections";
 import { inspectionHistory, inspectionDetails } from "../data/mockData";
@@ -13,6 +14,12 @@ export default function InspectionDetailPage() {
   const [cancelled, setCancelled] = useState(false);
   const [apiRecord, setApiRecord] = useState(null);
   const [apiError, setApiError] = useState("");
+  const [imageSources, setImageSources] = useState({
+    originalImageUrl: "",
+    gradcamImageUrl: "",
+    originalImage: "",
+    gradcamImage: "",
+  });
 
   useEffect(() => {
     if (USE_MOCK_API) return;
@@ -41,6 +48,66 @@ export default function InspectionDetailPage() {
   const mockDetail = USE_MOCK_API ? inspectionDetails[parseInt(id)] : null;
   const inspection = apiRecord?.inspection || mockInspection;
   const detail = apiRecord?.detail || mockDetail;
+  const originalImage = detail?.originalImage || "";
+  const gradcamImage = detail?.gradcamImage || "";
+  const originalImageNeedsApiHeaders = shouldLoadWithApiHeaders(originalImage);
+  const gradcamImageNeedsApiHeaders = shouldLoadWithApiHeaders(gradcamImage);
+  const displayedOriginalImage =
+    imageSources.originalImageUrl === originalImage
+      ? imageSources.originalImage
+      : originalImageNeedsApiHeaders
+        ? ""
+        : originalImage;
+  const displayedGradcamImage =
+    imageSources.gradcamImageUrl === gradcamImage
+      ? imageSources.gradcamImage
+      : gradcamImageNeedsApiHeaders
+        ? ""
+        : gradcamImage;
+
+  useEffect(() => {
+    if (!originalImageNeedsApiHeaders && !gradcamImageNeedsApiHeaders) {
+      return undefined;
+    }
+
+    let ignore = false;
+    const objectUrls = [];
+
+    async function resolveImageSource(url, shouldLoad) {
+      if (!shouldLoad) return url;
+
+      const blob = await apiBlobRequest(url);
+      const objectUrl = URL.createObjectURL(blob);
+      objectUrls.push(objectUrl);
+      return objectUrl;
+    }
+
+    Promise.all([
+      resolveImageSource(originalImage, originalImageNeedsApiHeaders),
+      resolveImageSource(gradcamImage, gradcamImageNeedsApiHeaders),
+    ])
+      .then(([nextOriginalImage, nextGradcamImage]) => {
+        if (ignore) {
+          [nextOriginalImage, nextGradcamImage].forEach((url) => {
+            if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
+          });
+          return;
+        }
+
+        setImageSources({
+          originalImageUrl: originalImage,
+          gradcamImageUrl: gradcamImage,
+          originalImage: nextOriginalImage,
+          gradcamImage: nextGradcamImage,
+        });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      ignore = true;
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [originalImage, gradcamImage, originalImageNeedsApiHeaders, gradcamImageNeedsApiHeaders]);
 
   if (!inspection || !detail) {
     return (
@@ -60,6 +127,7 @@ export default function InspectionDetailPage() {
   const isDefect = inspection.status === "defect";
   const isResolved = inspection.status === "resolved" && !cancelled;
   const effectivelyDefect = isDefect || (inspection.status === "resolved" && cancelled);
+  const resultText = effectivelyDefect || isResolved ? "불량 감지" : "이상 없음";
 
   return (
     <div className="max-w-3xl md:max-w-[1600px] mx-auto space-y-4 md:space-y-6">
@@ -93,11 +161,13 @@ export default function InspectionDetailPage() {
             <span className="text-[10px] font-bold text-white tracking-widest uppercase">원본 캡처</span>
           </div>
           <div className="aspect-video w-full overflow-hidden rounded-xl bg-surface-container-high">
-            <img
-              src={detail.originalImage}
-              alt="원본 부품 캡처 이미지"
-              className="w-full h-full object-cover"
-            />
+            {displayedOriginalImage && (
+              <img
+                src={displayedOriginalImage}
+                alt="원본 부품 캡처 이미지"
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
         </div>
 
@@ -107,11 +177,13 @@ export default function InspectionDetailPage() {
             <span className="text-[10px] font-bold text-white tracking-widest uppercase">Grad-CAM 분석</span>
           </div>
           <div className="aspect-video w-full overflow-hidden rounded-xl bg-surface-container-high relative">
-              <img
-                src={detail.gradcamImage}
-                alt="Grad-CAM 분석 이미지"
-                className="w-full h-full object-cover"
-              />
+              {displayedGradcamImage && (
+                <img
+                  src={displayedGradcamImage}
+                  alt="Grad-CAM 분석 이미지"
+                  className="w-full h-full object-cover"
+                />
+              )}
           </div>
         </div>
       </div>
@@ -127,7 +199,7 @@ export default function InspectionDetailPage() {
               {isResolved ? "조치완료" : effectivelyDefect ? "불량" : "정상"}
             </h2>
             <p className="text-lg font-bold text-on-surface mt-1">
-              {effectivelyDefect ? detail.defectType : isResolved ? detail.defectType : "이상 없음"}
+              {resultText}
             </p>
           </div>
           <div className={`px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 ${
@@ -146,11 +218,10 @@ export default function InspectionDetailPage() {
         <div className="bg-surface-container-low rounded-xl overflow-hidden">
           {[
             { label: "부품 ID",    value: inspection.partId },
-            { label: "부품 종류",  value: inspection.part },
-            { label: "감지 카메라", value: detail.cam },
             { label: "라인",       value: detail.line },
+            { label: "교대조",     value: detail.shift },
+            { label: "근무자 이름", value: detail.workerName },
             { label: "캡처 시각",  value: inspection.date },
-            { label: "불량 유형",  value: effectivelyDefect ? detail.defectType : "해당 없음" },
           ].map((item, i) => (
             <div
               key={item.label}
@@ -210,4 +281,14 @@ export default function InspectionDetailPage() {
       </section>
     </div>
   );
+}
+
+function shouldLoadWithApiHeaders(url) {
+  if (!url || !/^https?:\/\//.test(url)) return false;
+
+  try {
+    return new URL(url).origin === new URL(API_BASE_URL).origin;
+  } catch {
+    return false;
+  }
 }

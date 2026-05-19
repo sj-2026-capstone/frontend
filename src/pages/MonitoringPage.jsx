@@ -45,7 +45,7 @@ function inspectionRowsToDetections(rows) {
     cam: row.line || "-",
     part: row.part || "불량",
     status: row.status,
-    image: "/parts/frame-hemming.jpg",
+    image: "/parts/frame-normal.png",
   }));
 }
 
