@@ -64,7 +64,6 @@ export function inspectionResponseToHistoryRow(item) {
     part: defectType || "정상",
     status: mapInspectionStatus(item),
     rawStatus: item.status || "-",
-    confidence: normalizeConfidence(item.confidence ?? result.confidence ?? result.score ?? result.probability),
   };
 }
 
@@ -144,12 +143,6 @@ function mapInspectionStatus(item) {
 
 function getInspectionResult(item) {
   return item.result || item.analysisResult || item.inspectionResult || item.frameResult || item.aiResult || {};
-}
-
-function normalizeConfidence(value) {
-  const confidence = Number(value || 0);
-  if (!Number.isFinite(confidence)) return 0;
-  return confidence > 0 && confidence <= 1 ? Math.round(confidence * 1000) / 10 : confidence;
 }
 
 function formatDefectType(value) {

@@ -45,7 +45,6 @@ function inspectionRowsToDetections(rows) {
     cam: row.line || "-",
     part: row.part || "불량",
     status: row.status,
-    confidence: row.confidence,
     image: "/parts/frame-hemming.jpg",
   }));
 }
@@ -90,7 +89,6 @@ function DetectionStrip({ detections }) {
                   </span>
                 </div>
                 <p className="truncate text-sm font-extrabold text-on-surface">{det.part}</p>
-                <p className="mt-1 text-xs font-bold text-primary">신뢰도 {det.confidence}%</p>
               </div>
             </div>
           </div>

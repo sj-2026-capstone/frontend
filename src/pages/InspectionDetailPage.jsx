@@ -138,19 +138,6 @@ export default function InspectionDetailPage() {
           </div>
         </div>
 
-        {/* 신뢰도 바 */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-end">
-            <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-widest">AI Confidence</span>
-            <span className="text-2xl font-black text-[#022448]">{inspection.confidence}%</span>
-          </div>
-          <div className="h-3 w-full bg-surface-container-highest rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full ${effectivelyDefect ? "bg-gradient-to-r from-error to-secondary-container" : "bg-primary"}`}
-              style={{ width: `${inspection.confidence}%` }}
-            />
-          </div>
-        </div>
       </div>
 
       {/* ── 메타데이터 ── */}

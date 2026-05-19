@@ -38,45 +38,45 @@ export const linePerformance = [
 
 // ── 실시간 모니터링 ──
 export const cameraFeeds = [
-  { id: "CAM-01", line: "A라인", lineName: "A라인 조립", status: "alarm",  confidence: 94.2, fps: 30, image: "/parts/frame-sealing-defect.jpg",  time: "14:32:05", inspectionId: 247 },
-  { id: "CAM-02", line: "B라인", lineName: "B라인 용접", status: "normal", confidence: 99.8, fps: 30, image: "/parts/frame-exterior-normal.jpg", time: "14:32:05", inspectionId: null },
-  { id: "CAM-03", line: "B라인", lineName: "물류 이송",  status: "normal", confidence: 98.5, fps: 28, image: "/parts/frame-hemming-normal.png",  time: "14:32:05", inspectionId: null },
-  { id: "CAM-04", line: "C라인", lineName: "최종 검사",  status: "normal", confidence: 99.1, fps: 30, image: "/parts/frame-hole-normal.jpg",     time: "14:32:05", inspectionId: null },
+  { id: "CAM-01", line: "A라인", lineName: "A라인 조립", status: "alarm",  fps: 30, image: "/parts/frame-sealing-defect.jpg",  time: "14:32:05", inspectionId: 247 },
+  { id: "CAM-02", line: "B라인", lineName: "B라인 용접", status: "normal", fps: 30, image: "/parts/frame-exterior-normal.jpg", time: "14:32:05", inspectionId: null },
+  { id: "CAM-03", line: "B라인", lineName: "물류 이송",  status: "normal", fps: 28, image: "/parts/frame-hemming-normal.png",  time: "14:32:05", inspectionId: null },
+  { id: "CAM-04", line: "C라인", lineName: "최종 검사",  status: "normal", fps: 30, image: "/parts/frame-hole-normal.jpg",     time: "14:32:05", inspectionId: null },
 ];
 
 export const recentDetections = [
   {
-    time: "14:32:05", cam: "CAM-01", part: "도어", status: "defect", confidence: 94.2,
+    time: "14:32:05", cam: "CAM-01", part: "도어", status: "defect",
     image: "/parts/door-scratch.jpg",
   },
   {
-    time: "14:31:50", cam: "CAM-02", part: "범퍼", status: "normal", confidence: 99.1,
+    time: "14:31:50", cam: "CAM-02", part: "범퍼", status: "normal",
     image: "/parts/bumper-normal.jpg",
   },
   {
-    time: "14:31:42", cam: "CAM-02", part: "헤드램프", status: "normal", confidence: 98.8,
+    time: "14:31:42", cam: "CAM-02", part: "헤드램프", status: "normal",
     image: "/parts/headlamp-normal.jpg",
   },
   {
-    time: "14:31:12", cam: "CAM-03", part: "프레임", status: "normal", confidence: 99.5,
+    time: "14:31:12", cam: "CAM-03", part: "프레임", status: "normal",
     image: "/parts/frame-normal.png",
   },
   {
-    time: "14:30:58", cam: "CAM-04", part: "카울커버", status: "normal", confidence: 97.9,
+    time: "14:30:58", cam: "CAM-04", part: "카울커버", status: "normal",
     image: "/parts/cowl-normal.jpg",
   },
 ];
 
 // ── 검사 이력 ──
 export const inspectionHistory = [
-  { id: 247, partId: "DOOR-0247", date: "2026.03.28 14:30", part: "도어",           status: "defect",   confidence: 94.2 },
-  { id: 246, partId: "BUMP-0246", date: "2026.03.28 14:15", part: "범퍼",           status: "normal",   confidence: 98.1 },
-  { id: 245, partId: "HEAD-0245", date: "2026.03.28 13:55", part: "헤드램프",       status: "normal",   confidence: 96.5 },
-  { id: 244, partId: "FRAM-0244", date: "2026.03.28 13:20", part: "프레임",         status: "resolved", confidence: 87.5 },
-  { id: 243, partId: "COWL-0243", date: "2026.03.28 11:45", part: "카울커버",       status: "normal",   confidence: 99.2 },
-  { id: 242, partId: "GRIL-0242", date: "2026.03.28 10:30", part: "라디에이터 그릴", status: "normal",   confidence: 97.8 },
-  { id: 241, partId: "TAIL-0241", date: "2026.03.28 09:15", part: "테일 램프",      status: "normal",   confidence: 95.4 },
-  { id: 240, partId: "FEND-0240", date: "2026.03.27 17:40", part: "휀더",           status: "resolved", confidence: 91.3 },
+  { id: 247, partId: "DOOR-0247", date: "2026.03.28 14:30", part: "도어",           status: "defect" },
+  { id: 246, partId: "BUMP-0246", date: "2026.03.28 14:15", part: "범퍼",           status: "normal" },
+  { id: 245, partId: "HEAD-0245", date: "2026.03.28 13:55", part: "헤드램프",       status: "normal" },
+  { id: 244, partId: "FRAM-0244", date: "2026.03.28 13:20", part: "프레임",         status: "resolved" },
+  { id: 243, partId: "COWL-0243", date: "2026.03.28 11:45", part: "카울커버",       status: "normal" },
+  { id: 242, partId: "GRIL-0242", date: "2026.03.28 10:30", part: "라디에이터 그릴", status: "normal" },
+  { id: 241, partId: "TAIL-0241", date: "2026.03.28 09:15", part: "테일 램프",      status: "normal" },
+  { id: 240, partId: "FEND-0240", date: "2026.03.27 17:40", part: "휀더",           status: "resolved" },
 ];
 
 // ── 실시간 알림 ──
