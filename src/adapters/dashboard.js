@@ -5,7 +5,7 @@ import {
   linePerformance,
 } from "../data/mockData";
 
-export function dashboardResponseToView(response) {
+export function dashboardResponseToView(response, fallback = {}) {
   const summary = response?.summary || {};
   const actionSummary = response?.actionSummary || {};
 
@@ -48,7 +48,7 @@ export function dashboardResponseToView(response) {
           date: formatDateLabel(item.date),
           value: Number(item.defectRate || 0),
         }))
-      : defectTrendData,
+      : fallback.defectTrendData ?? defectTrendData,
     actionStatus: {
       total: Number(actionSummary.total || 0),
       pending: Number(actionSummary.pendingCount || 0),
@@ -64,7 +64,7 @@ export function dashboardResponseToView(response) {
             width: `${Math.min(Math.max(rate, 0), 100)}%`,
           };
         })
-      : linePerformance,
+      : fallback.linePerformance ?? linePerformance,
     lastUpdatedAt: response?.lastUpdatedAt || null,
   };
 }

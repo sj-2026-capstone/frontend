@@ -2,17 +2,17 @@ import { mockFactoryLines } from "../data/mockData";
 
 const lineOrder = ["A", "B", "C", "D"];
 
-export function linesResponseToFactoryLines(response) {
+export function linesResponseToFactoryLines(response, fallbackLines = mockFactoryLines) {
   const items = Array.isArray(response)
     ? response
     : response?.lines || response?.content || response?.items || [];
 
-  if (!items.length) return mockFactoryLines;
+  if (!items.length) return fallbackLines;
 
   const normalized = items.map(normalizeLine).filter(Boolean);
   const byId = new Map(normalized.map((line) => [line.id, line]));
 
-  return lineOrder.map((id) => byId.get(id) || mockFactoryLines.find((line) => line.id === id));
+  return lineOrder.map((id) => byId.get(id) || fallbackLines.find((line) => line.id === id)).filter(Boolean);
 }
 
 function normalizeLine(item) {

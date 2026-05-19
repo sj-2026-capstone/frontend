@@ -37,8 +37,8 @@ export default function InspectionDetailPage() {
     };
   }, [id]);
 
-  const mockInspection = inspectionHistory.find((i) => i.id === parseInt(id));
-  const mockDetail = inspectionDetails[parseInt(id)];
+  const mockInspection = USE_MOCK_API ? inspectionHistory.find((i) => i.id === parseInt(id)) : null;
+  const mockDetail = USE_MOCK_API ? inspectionDetails[parseInt(id)] : null;
   const inspection = apiRecord?.inspection || mockInspection;
   const detail = apiRecord?.detail || mockDetail;
 

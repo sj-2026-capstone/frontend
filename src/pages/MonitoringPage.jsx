@@ -4,8 +4,10 @@ import Icon from "../components/Icon";
 import FactoryFloorMap from "../components/FactoryFloorMap";
 import { USE_MOCK_API } from "../api/config";
 import { getLines } from "../api/lines";
+import { getInspections } from "../api/inspections";
 import { subscribeNotifications } from "../api/notifications";
 import { applyLineAlarmNotification, linesResponseToFactoryLines, mockFactoryLineView } from "../adapters/lines";
+import { inspectionPageResponseToHistoryPage } from "../adapters/inspections";
 import { recentDetections } from "../data/mockData";
 
 function isDefectDetection(det) {
@@ -14,7 +16,7 @@ function isDefectDetection(det) {
 }
 
 function detectionTimeValue(det) {
-  const raw = String(det.detectedAt || det.createdAt || det.time || "");
+  const raw = String(det.detectedAt || det.createdAt || det.date || det.time || "");
   const parsed = Date.parse(raw);
   if (!Number.isNaN(parsed)) return parsed;
 
@@ -25,11 +27,38 @@ function detectionTimeValue(det) {
   return Number(hour) * 3600 + Number(minute) * 60 + Number(second);
 }
 
-function DetectionStrip() {
-  const defectDetections = recentDetections
+function formatDetectionTime(value) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function inspectionRowsToDetections(rows) {
+  return rows.map((row) => ({
+    time: formatDetectionTime(row.date),
+    date: row.date,
+    cam: row.line || "-",
+    part: row.part || "불량",
+    status: row.status,
+    confidence: row.confidence,
+    image: "/parts/frame-hemming.jpg",
+  }));
+}
+
+function getRecentDefectDetections(detections) {
+  return detections
     .filter(isDefectDetection)
     .sort((a, b) => detectionTimeValue(b) - detectionTimeValue(a))
     .slice(0, 5);
+}
+
+function DetectionStrip({ detections }) {
+  const defectDetections = getRecentDefectDetections(detections);
 
   return (
     <section className="rounded-xl bg-surface-container-lowest p-4 shadow-sm">
@@ -78,7 +107,8 @@ function DetectionStrip() {
 
 export default function MonitoringPage() {
   const navigate = useNavigate();
-  const [lines, setLines] = useState(() => mockFactoryLineView());
+  const [lines, setLines] = useState(() => (USE_MOCK_API ? mockFactoryLineView() : []));
+  const [detections, setDetections] = useState(() => (USE_MOCK_API ? recentDetections : []));
   const linesRef = useRef(lines);
   const [apiError, setApiError] = useState("");
 
@@ -93,12 +123,39 @@ export default function MonitoringPage() {
 
     getLines()
       .then((data) => {
-        if (!ignore) setLines(linesResponseToFactoryLines(data));
+        if (!ignore) setLines(linesResponseToFactoryLines(data, []));
       })
       .catch((err) => {
         if (!ignore) {
           setApiError(err.message);
-          setLines(mockFactoryLineView());
+          setLines([]);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+
+    getInspections({ page: 0, size: 50, status: "DONE" })
+      .then((data) => {
+        if (ignore) return;
+
+        const pageData = inspectionPageResponseToHistoryPage(data, {
+          number: 0,
+          size: 50,
+        });
+        setDetections(inspectionRowsToDetections(pageData.rows));
+      })
+      .catch((err) => {
+        if (!ignore) {
+          setApiError(err.message);
+          setDetections([]);
         }
       });
 
@@ -116,7 +173,7 @@ export default function MonitoringPage() {
       getLines()
         .then((data) => {
           if (ignore) return;
-          const nextLines = linesResponseToFactoryLines(data);
+          const nextLines = linesResponseToFactoryLines(data, []);
           linesRef.current = nextLines;
           setLines(nextLines);
         })
@@ -166,7 +223,7 @@ export default function MonitoringPage() {
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <FactoryFloorMap lines={lines} onLineSelect={handleLineSelect} />
-        <DetectionStrip />
+        <DetectionStrip detections={detections} />
       </section>
     </div>
   );

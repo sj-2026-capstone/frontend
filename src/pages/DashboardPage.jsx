@@ -17,7 +17,11 @@ function buildTrendPoints(items) {
 
 export default function DashboardPage() {
   const [showAlert, setShowAlert] = useState(false);
-  const [dashboard, setDashboard] = useState(() => mockDashboardView());
+  const [dashboard, setDashboard] = useState(() =>
+    USE_MOCK_API
+      ? mockDashboardView()
+      : dashboardResponseToView({}, { defectTrendData: [], linePerformance: [] })
+  );
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function DashboardPage() {
 
     getDashboard()
       .then((data) => {
-        if (!ignore) setDashboard(dashboardResponseToView(data));
+        if (!ignore) setDashboard(dashboardResponseToView(data, { defectTrendData: [], linePerformance: [] }));
       })
       .catch((err) => {
         if (!ignore) setApiError(err.message);

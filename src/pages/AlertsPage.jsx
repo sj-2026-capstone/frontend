@@ -7,7 +7,7 @@ import { alertsData } from "../data/mockData";
 
 export default function AlertsPage() {
   const [tab, setTab] = useState("unread");
-  const [alerts, setAlerts] = useState(alertsData);
+  const [alerts, setAlerts] = useState(() => (USE_MOCK_API ? alertsData : []));
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {

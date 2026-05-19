@@ -1,5 +1,5 @@
 export function accountListResponseToUsers(response) {
-  const items = response?.items || [];
+  const items = response?.items || response?.accounts || response?.content || response?.users || [];
   return items.map((item) => ({
     name: item.userName,
     userId: item.loginId || String(item.userId),
