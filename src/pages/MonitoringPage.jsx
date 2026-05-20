@@ -56,26 +56,33 @@ function getRecentDefectDetections(detections) {
     .slice(0, 5);
 }
 
-function DetectionStrip({ detections }) {
+function DetectionStrip({ detections, compact = false }) {
   const defectDetections = getRecentDefectDetections(detections);
+  const visibleDetections = compact ? defectDetections.slice(0, 3) : defectDetections;
 
   return (
-    <section className="rounded-xl bg-surface-container-lowest p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-wider text-primary">
+    <section
+      className={
+        compact
+          ? "cctv-detection-panel rounded-lg border border-outline-variant/20 bg-white/95 p-3 shadow-sm"
+          : "rounded-xl bg-surface-container-lowest p-4 shadow-sm"
+      }
+    >
+      <div className={compact ? "mb-3 flex items-center justify-between" : "mb-4 flex items-center justify-between"}>
+        <h2 className={`flex items-center gap-2 font-black uppercase tracking-wider text-primary ${compact ? "text-xs" : "text-sm"}`}>
           <Icon name="analytics" className="text-base" />
           최근 감지 내역
         </h2>
         <span className="text-[11px] font-bold text-on-surface-variant">실시간</span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-        {defectDetections.map((det, index) => (
+      <div className={compact ? "space-y-2" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5"}>
+        {visibleDetections.map((det, index) => (
           <div
             key={`${det.time}-${index}`}
-            className="rounded-lg border border-outline-variant/20 bg-white p-3 shadow-sm"
+            className={`rounded-lg border border-outline-variant/20 bg-white shadow-sm ${compact ? "p-2" : "p-3"}`}
           >
             <div className="flex items-center gap-3">
-              <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-highest">
+              <div className={`relative flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-highest ${compact ? "h-11 w-11" : "h-14 w-14"}`}>
                 <img className="h-full w-full object-cover" src={det.image} alt={det.part} />
                 <div className="absolute inset-0 bg-error/15" />
               </div>
@@ -94,7 +101,7 @@ function DetectionStrip({ detections }) {
           </div>
         ))}
         {!defectDetections.length && (
-          <div className="rounded-lg border border-dashed border-outline-variant/40 bg-white/70 p-4 text-center text-xs font-bold text-on-surface-variant">
+          <div className={`rounded-lg border border-dashed border-outline-variant/40 bg-white/70 text-center text-xs font-bold text-on-surface-variant ${compact ? "p-3" : "p-4"}`}>
             최근 불량 감지 내역이 없습니다.
           </div>
         )}
@@ -219,10 +226,9 @@ export default function MonitoringPage() {
         </div>
       )}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <FactoryFloorMap lines={lines} onLineSelect={handleLineSelect} />
-        <DetectionStrip detections={detections} />
-      </section>
+      <FactoryFloorMap lines={lines} onLineSelect={handleLineSelect}>
+        <DetectionStrip detections={detections} compact />
+      </FactoryFloorMap>
     </div>
   );
 }
