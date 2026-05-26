@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import { USE_MOCK_API } from "../api/config";
 import { getDashboard } from "../api/dashboard";
+import { subscribeNotifications } from "../api/notifications";
 import { dashboardResponseToView, mockDashboardView } from "../adapters/dashboard";
 
 function buildTrendPoints(items) {
@@ -15,8 +17,41 @@ function buildTrendPoints(items) {
   });
 }
 
+function unwrapNotification(notification) {
+  if (notification?.data && typeof notification.data === "object") return notification.data;
+  if (notification?.payload && typeof notification.payload === "object") return notification.payload;
+  return notification || {};
+}
+
+function pickText(...values) {
+  const value = values.find((item) => item !== undefined && item !== null && String(item).trim());
+  return value === undefined || value === null ? "-" : String(value).trim();
+}
+
+function isDefectNotification(notification) {
+  const item = unwrapNotification(notification);
+  const type = String(item.notificationType || item.type || "").toUpperCase();
+  return !type || type === "DEFECT_DETECTED";
+}
+
+function normalizeDefectAlert(notification) {
+  const item = unwrapNotification(notification);
+
+  return {
+    title: pickText(item.title, "신규 불량 감지"),
+    message: pickText(item.message, item.desc, item.description, "관리자 확인이 필요한 불량이 감지되었습니다."),
+    inspectionId: item.inspectionId || item.latestInspectionId || item.defectInspectionId || null,
+    line: pickText(item.lineName, item.lineCode, item.lineId, item.line),
+    part: pickText(item.partName, item.partCode, item.partId, item.productName, item.productId),
+    defectType: pickText(item.defectType, item.defectName, item.defectDisplayName),
+    camera: pickText(item.cameraName, item.cameraId, item.deviceId),
+    detectedAt: pickText(item.detectedAt, item.createdAt, item.updatedAt, item.time),
+  };
+}
+
 export default function DashboardPage() {
-  const [showAlert, setShowAlert] = useState(false);
+  const navigate = useNavigate();
+  const [defectAlert, setDefectAlert] = useState(null);
   const [dashboard, setDashboard] = useState(() =>
     USE_MOCK_API
       ? mockDashboardView()
@@ -42,6 +77,26 @@ export default function DashboardPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+
+    let ignore = false;
+    const source = subscribeNotifications(
+      (notification) => {
+        if (ignore || !isDefectNotification(notification)) return;
+        setDefectAlert(normalizeDefectAlert(notification));
+      },
+      (err) => {
+        if (!ignore) setApiError(err.message);
+      }
+    );
+
+    return () => {
+      ignore = true;
+      source.close();
+    };
+  }, []);
+
   const trendPoints = useMemo(
     () => buildTrendPoints(dashboard.defectTrendData),
     [dashboard.defectTrendData]
@@ -64,6 +119,68 @@ export default function DashboardPage() {
           {apiError}
         </div>
       )}
+
+      {defectAlert && (
+        <section className="mb-6 rounded-xl border border-error/20 bg-error/5 p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex gap-4">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-error text-white">
+                <Icon name="warning" />
+              </div>
+              <div>
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-extrabold text-error">{defectAlert.title}</h2>
+                  <span className="rounded bg-error px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                    Defect
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-on-surface">{defectAlert.message}</p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 lg:justify-end">
+              {defectAlert.inspectionId && (
+                <button
+                  className="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-primary-container"
+                  onClick={() => navigate(`/inspection/${defectAlert.inspectionId}`)}
+                  type="button"
+                >
+                  상세 보기
+                </button>
+              )}
+              <button
+                aria-label="알림 닫기"
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-on-surface-variant transition-colors hover:bg-surface-container"
+                onClick={() => setDefectAlert(null)}
+                type="button"
+              >
+                <Icon name="close" className="text-lg" />
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+            {[
+              { label: "검사 ID", value: defectAlert.inspectionId || "-" },
+              { label: "라인", value: defectAlert.line },
+              { label: "부품", value: defectAlert.part },
+              { label: "불량 유형", value: defectAlert.defectType },
+              { label: "카메라", value: defectAlert.camera },
+              { label: "감지 시각", value: defectAlert.detectedAt },
+            ].map((item) => (
+              <div key={item.label} className="rounded-lg bg-white px-3 py-2">
+                <div className="text-[10px] font-black uppercase tracking-wider text-on-surface-variant">
+                  {item.label}
+                </div>
+                <div className="mt-1 truncate text-sm font-bold text-on-surface" title={String(item.value)}>
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         {dashboard.kpis.map((kpi) => (
@@ -266,39 +383,6 @@ export default function DashboardPage() {
         <div>AI Factory Quality System v2.4.0</div>
         <div>Last Updated: {lastUpdatedAt}</div>
       </footer>
-
-      {/* ── Alert Toast ── */}
-      {!showAlert && (
-        <button
-          onClick={() => setShowAlert(true)}
-          className="fixed bottom-8 right-8 bg-error text-white px-4 py-2 rounded-lg shadow-lg text-sm font-bold hover:bg-red-700 transition-colors z-50"
-        >
-          <Icon name="warning" className="text-sm mr-1 align-middle" />
-          알림 시연
-        </button>
-      )}
-
-      {showAlert && (
-        <div className="fixed top-6 right-6 z-50 animate-slide-in">
-          <div className="bg-primary-container px-6 py-4 rounded-xl shadow-[0px_12px_32px_rgba(2,36,72,0.25)] border border-white/10 flex items-center gap-4">
-            <span className="w-3 h-3 bg-error rounded-full animate-pulse" />
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-on-primary-container uppercase tracking-widest">
-                New Alert
-              </span>
-              <p className="text-sm font-semibold text-on-primary-container">
-                새로운 불량 감지: A라인 엔진 부품 — 지금 확인하기
-              </p>
-            </div>
-            <button
-              className="ml-4 p-1 hover:bg-white/10 rounded-full transition-colors"
-              onClick={() => setShowAlert(false)}
-            >
-              <Icon name="close" className="text-lg text-on-primary-container" />
-            </button>
-          </div>
-        </div>
-      )}
     </>
   );
 }
