@@ -12,10 +12,16 @@ export function getInspectionStatus(inspectionId) {
   return apiRequest(`/api/inspections/${inspectionId}/status`);
 }
 
-export function completeInspectionAction(inspectionId) {
-  return apiRequest(`/api/inspections/${inspectionId}/action`, {
+export function completeInspectionAction(inspectionId, payload) {
+  const options = {
     method: "PATCH",
-  });
+  };
+
+  if (payload !== undefined) {
+    options.body = JSON.stringify(payload);
+  }
+
+  return apiRequest(`/api/inspections/${inspectionId}/action`, options);
 }
 
 export function startInspectionAnalysis(inspectionId) {

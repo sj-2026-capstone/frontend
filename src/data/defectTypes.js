@@ -1,0 +1,15 @@
+export const DEFECT_TYPE_OPTIONS = [
+  { value: "스크래치", label: "스크래치" },
+  { value: "외관손상", label: "외관손상" },
+  { value: "단차", label: "단차" },
+  { value: "장착불량", label: "장착불량" },
+  { value: "고정핀", label: "고정핀" },
+  { value: "연계", label: "연계" },
+  { value: "유격", label: "유격" },
+  { value: "체결", label: "체결" },
+  { value: "실링", label: "실링" },
+  { value: "외관", label: "외관" },
+  { value: "헤밍", label: "헤밍" },
+  { value: "홀", label: "홀" },
+  { value: "외관 손상", label: "외관 손상" },
+];

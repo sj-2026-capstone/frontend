@@ -5,6 +5,7 @@ import { API_BASE_URL, USE_MOCK_API } from "../api/config";
 import { apiBlobRequest } from "../api/client";
 import { completeInspectionAction, getInspection } from "../api/inspections";
 import { inspectionResponseToDetail, inspectionResponseToHistoryRow } from "../adapters/inspections";
+import { DEFECT_TYPE_OPTIONS } from "../data/defectTypes";
 import { inspectionHistory, inspectionDetails } from "../data/mockData";
 
 export default function InspectionDetailPage() {
@@ -15,6 +16,7 @@ export default function InspectionDetailPage() {
   const [apiRecord, setApiRecord] = useState(null);
   const [apiError, setApiError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [selectedDefectType, setSelectedDefectType] = useState("");
   const [imageSources, setImageSources] = useState({
     originalImageUrl: "",
     gradcamImageUrl: "",
@@ -49,6 +51,7 @@ export default function InspectionDetailPage() {
   const mockDetail = USE_MOCK_API ? inspectionDetails[parseInt(id)] : null;
   const inspection = apiRecord?.inspection || mockInspection;
   const detail = apiRecord?.detail || mockDetail;
+  const reportedDefectType = inspection?.defectType || detail?.defectType || "";
   const originalImage = detail?.originalImage || "";
   const gradcamImage = detail?.gradcamImage || "";
   const originalImageNeedsApiHeaders = shouldLoadWithApiHeaders(originalImage);
@@ -65,6 +68,17 @@ export default function InspectionDetailPage() {
       : gradcamImageNeedsApiHeaders
         ? ""
         : gradcamImage;
+
+  useEffect(() => {
+    setSelectedDefectType("");
+    setConfirmed(false);
+    setCancelled(false);
+    setApiError("");
+  }, [id]);
+
+  useEffect(() => {
+    if (reportedDefectType) setSelectedDefectType(reportedDefectType);
+  }, [reportedDefectType]);
 
   useEffect(() => {
     if (!originalImageNeedsApiHeaders && !gradcamImageNeedsApiHeaders) {
@@ -134,15 +148,24 @@ export default function InspectionDetailPage() {
   const effectivelyDefect = isDefect && !isResolved;
   const resultText = isDefect || isResolved ? "불량 감지" : "이상 없음";
 
-  const handleCompleteAction = async () => {
+  const handleSubmitDefectReport = async () => {
+    const defectType = selectedDefectType.trim();
+
+    if (!defectType) {
+      setApiError("불량 유형을 선택해 주세요.");
+      return;
+    }
+
     if (USE_MOCK_API) {
       setConfirmed(true);
+      setCancelled(false);
+      setApiError("");
       return;
     }
 
     setActionLoading(true);
     try {
-      await completeInspectionAction(id);
+      await completeInspectionAction(id, { defectType });
       setApiRecord((prev) =>
         prev
           ? {
@@ -150,6 +173,11 @@ export default function InspectionDetailPage() {
               inspection: {
                 ...prev.inspection,
                 actionStatus: "RESOLVED",
+                defectType,
+              },
+              detail: {
+                ...prev.detail,
+                defectType,
               },
             }
           : prev
@@ -175,10 +203,8 @@ export default function InspectionDetailPage() {
       {/* ── 소스 정보 배너 ── */}
       <div className="bg-surface-container-low rounded-xl px-4 py-3 flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Device Identity</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Inspection Line</span>
           <div className="flex items-center gap-2 text-[#1E3A5F] font-bold">
-            <span>{detail.cam}</span>
-            <span className="w-1 h-1 bg-outline-variant rounded-full" />
             <span>{detail.line}</span>
           </div>
         </div>
@@ -206,16 +232,16 @@ export default function InspectionDetailPage() {
           </div>
         </div>
 
-        {/* Grad-CAM 분석 */}
+        {/* AI 분석 이미지 */}
         <div className="relative">
           <div className="absolute top-3 left-3 z-10 bg-primary/80 backdrop-blur-md px-3 py-1 rounded-full">
-            <span className="text-[10px] font-bold text-white tracking-widest uppercase">Grad-CAM 분석</span>
+            <span className="text-[10px] font-bold text-white tracking-widest uppercase">AI 분석 이미지</span>
           </div>
           <div className="aspect-video w-full overflow-hidden rounded-xl bg-surface-container-high relative">
               {displayedGradcamImage && (
                 <img
                   src={displayedGradcamImage}
-                  alt="Grad-CAM 분석 이미지"
+                  alt="AI 분석 이미지"
                   className="w-full h-full object-cover"
                 />
               )}
@@ -269,6 +295,66 @@ export default function InspectionDetailPage() {
         </div>
       </section>
 
+      {(effectivelyDefect || isResolved) && (
+        <section className="space-y-4 rounded-xl bg-surface-container-lowest p-5 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-on-surface-variant">
+                Defect Report
+              </span>
+              <h3 className="text-xl font-extrabold text-[#022448]">불량 유형 보고</h3>
+            </div>
+            <span
+              className={`inline-flex w-fit items-center gap-1 rounded-lg px-3 py-1 text-xs font-bold ${
+                isResolved
+                  ? selectedDefectType
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-surface-container-high text-on-surface-variant"
+                  : "bg-error-container text-on-error-container"
+              }`}
+            >
+              <Icon name={isResolved ? "check_circle" : "assignment"} className="text-sm" />
+              {isResolved ? (selectedDefectType ? "보고 완료" : "조치완료") : "작업자 확인 필요"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div className="space-y-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-outline" htmlFor="defectType">
+                불량 유형
+              </label>
+              <select
+                id="defectType"
+                className="w-full rounded-lg border-none bg-surface-container-highest px-4 py-3 text-sm font-bold text-[#022448] transition-all focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-70"
+                value={selectedDefectType}
+                disabled={actionLoading || isResolved}
+                onChange={(event) => setSelectedDefectType(event.target.value)}
+              >
+                <option value="">불량 유형 선택</option>
+                {DEFECT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              disabled={actionLoading || isResolved || !selectedDefectType}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-8 py-4 font-bold transition-all active:scale-[0.98] md:w-auto ${
+                actionLoading || isResolved || !selectedDefectType
+                  ? "cursor-not-allowed border-2 border-outline-variant bg-surface-container-high text-on-surface-variant"
+                  : "bg-green-600 text-white hover:bg-green-700"
+              }`}
+              onClick={handleSubmitDefectReport}
+            >
+              <Icon name={isResolved ? "check_circle" : "task_alt"} />
+              {actionLoading ? "제출 중" : isResolved ? "제출 완료" : "보고 제출"}
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* ── 액션 버튼 ── */}
       <section className="flex flex-col md:flex-row flex-wrap gap-3 pt-4">
         <button
@@ -285,34 +371,6 @@ export default function InspectionDetailPage() {
           <Icon name="history" />
           검사 이력 보기
         </button>
-        {(effectivelyDefect || isResolved) && (
-          <>
-            <button
-              disabled={actionLoading || confirmed || isResolved}
-              className={`w-full md:w-auto flex-1 md:flex-none py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${
-                actionLoading || confirmed || isResolved
-                  ? "bg-blue-100 text-blue-700 border-2 border-blue-300 cursor-default"
-                  : "bg-green-600 text-white hover:bg-green-700"
-              }`}
-              onClick={handleCompleteAction}
-            >
-              <Icon name={confirmed || isResolved ? "check_circle" : "task_alt"} />
-              {actionLoading ? "처리 중" : confirmed || isResolved ? "조치완료됨" : "조치완료"}
-            </button>
-            {USE_MOCK_API && (confirmed || isResolved) && (
-              <button
-                className="w-full md:w-auto border-2 border-outline-variant text-on-surface-variant py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-surface-container transition-all active:scale-95"
-                onClick={() => {
-                  setConfirmed(false);
-                  setCancelled(inspection.status === "resolved" || inspection.actionStatus === "RESOLVED");
-                }}
-              >
-                <Icon name="cancel" />
-                취소
-              </button>
-            )}
-          </>
-        )}
       </section>
     </div>
   );

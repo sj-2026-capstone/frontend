@@ -65,6 +65,7 @@ export function inspectionResponseToHistoryRow(item) {
     status,
     image: resolveBackendImageUrl(getOriginalImage(item)) || "",
     actionStatus,
+    defectType: getDefectType(item),
     rawStatus: item.status || "-",
   };
 }
@@ -94,6 +95,7 @@ export function inspectionResponseToDetail(item) {
     detectionMethod: "Backend API",
     originalImage: resolveBackendImageUrl(getOriginalImage(item)) || "/parts/frame-normal.png",
     gradcamImage: resolveBackendImageUrl(getGradcamImage(item)) || "/parts/frame-normal.png",
+    defectType: getDefectType(item),
   };
 }
 
@@ -173,6 +175,31 @@ function getGradcamImage(item) {
     result.resultImageUrl ||
     result.heatmapImageUrl ||
     item.imageUrl
+  );
+}
+
+function getDefectType(item) {
+  const result = getInspectionResult(item);
+  const report = item.defectReport || item.report || item.action || result.defectReport || {};
+  const defectType = item.defectType;
+  const resultDefectType = result.defectType;
+
+  return (
+    pickText(
+      item.defectTypeName,
+      item.reportedDefectType,
+      item.confirmedDefectType,
+      item.actionDefectType,
+      typeof defectType === "string" ? defectType : defectType?.name,
+      defectType?.defectTypeName,
+      report.defectTypeName,
+      report.reportedDefectType,
+      report.confirmedDefectType,
+      typeof report.defectType === "string" ? report.defectType : report.defectType?.name,
+      result.defectTypeName,
+      result.reportedDefectType,
+      typeof resultDefectType === "string" ? resultDefectType : resultDefectType?.name
+    ) || ""
   );
 }
 

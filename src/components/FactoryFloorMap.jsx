@@ -141,12 +141,12 @@ function CameraFeedCard({ feed, onSelect }) {
       type={clickable ? "button" : undefined}
       className={`cctv-feed-card cctv-feed-card--${feed.copy.tone} group relative block w-full overflow-hidden rounded-lg border bg-black text-left shadow-sm`}
       onClick={() => clickable && onSelect?.({ ...feed.line, inspectionId: feed.inspectionId })}
-      aria-label={`${feed.id} ${feed.location} ${feed.copy.statusKo}`}
+      aria-label={`${feed.location} ${feed.copy.statusKo}`}
     >
       <img
         className="cctv-video-image absolute inset-0 h-full w-full object-cover"
         src={feed.image}
-        alt={`${feed.location} 카메라 화면`}
+        alt={`${feed.location} 검사 영상`}
         draggable="false"
       />
       <div className="cctv-video-vignette absolute inset-0" />
@@ -192,14 +192,14 @@ export default function FactoryFloorMap({ lines, onLineSelect, children }) {
       className={`cctv-monitor-shell rounded-xl border p-3 shadow-sm ${
         hasAlarm ? "border-error ring-4 ring-error/20 active-pulse" : "border-outline-variant/30"
       }`}
-      aria-label="실시간 CCTV 검사 모니터링"
+      aria-label="실시간 검사 영상 모니터링"
     >
       <div className="mb-3 flex items-center justify-between gap-3 px-1">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary/60">
-            Vision Camera Live
+            Inspection Live Feed
           </p>
-          <h2 className="mt-0.5 text-base font-black text-primary">실시간 검사 카메라</h2>
+          <h2 className="mt-0.5 text-base font-black text-primary">실시간 검사 영상</h2>
         </div>
         <div className="rounded bg-black/80 px-2.5 py-1.5 font-mono text-[11px] font-black text-emerald-300">
           {liveClock}

@@ -38,31 +38,31 @@ export const linePerformance = [
 
 // ── 실시간 모니터링 ──
 export const cameraFeeds = [
-  { id: "CAM-01", line: "A라인", lineName: "A라인 조립", status: "alarm",  fps: 30, image: "/parts/frame-normal.png",  time: "14:32:05", inspectionId: 247 },
-  { id: "CAM-02", line: "B라인", lineName: "B라인 용접", status: "normal", fps: 30, image: "/parts/frame-exterior-normal.jpg", time: "14:32:05", inspectionId: null },
-  { id: "CAM-03", line: "B라인", lineName: "물류 이송",  status: "normal", fps: 28, image: "/parts/frame-normal.png",  time: "14:32:05", inspectionId: null },
-  { id: "CAM-04", line: "C라인", lineName: "최종 검사",  status: "normal", fps: 30, image: "/parts/frame-normal.png",     time: "14:32:05", inspectionId: null },
+  { id: "LINE-A", line: "A라인", lineName: "A라인 조립", status: "alarm",  fps: 30, image: "/parts/frame-normal.png",  time: "14:32:05", inspectionId: 247 },
+  { id: "LINE-B", line: "B라인", lineName: "B라인 용접", status: "normal", fps: 30, image: "/parts/frame-exterior-normal.jpg", time: "14:32:05", inspectionId: null },
+  { id: "LINE-B-TRANSFER", line: "B라인", lineName: "물류 이송",  status: "normal", fps: 28, image: "/parts/frame-normal.png",  time: "14:32:05", inspectionId: null },
+  { id: "LINE-C", line: "C라인", lineName: "최종 검사",  status: "normal", fps: 30, image: "/parts/frame-normal.png",     time: "14:32:05", inspectionId: null },
 ];
 
 export const recentDetections = [
   {
-    inspectionId: 247, time: "14:32:05", cam: "CAM-01", part: "도어", status: "defect",
+    inspectionId: 247, time: "14:32:05", line: "A라인", part: "도어", status: "defect",
     image: "/parts/frame-normal.png",
   },
   {
-    time: "14:31:50", cam: "CAM-02", part: "범퍼", status: "normal",
+    time: "14:31:50", line: "B라인", part: "범퍼", status: "normal",
     image: "/parts/bumper-normal.jpg",
   },
   {
-    time: "14:31:42", cam: "CAM-02", part: "헤드램프", status: "normal",
+    time: "14:31:42", line: "B라인", part: "헤드램프", status: "normal",
     image: "/parts/headlamp-normal.jpg",
   },
   {
-    time: "14:31:12", cam: "CAM-03", part: "프레임", status: "normal",
+    time: "14:31:12", line: "B라인", part: "프레임", status: "normal",
     image: "/parts/frame-normal.png",
   },
   {
-    time: "14:30:58", cam: "CAM-04", part: "카울커버", status: "normal",
+    time: "14:30:58", line: "C라인", part: "카울커버", status: "normal",
     image: "/parts/cowl-normal.jpg",
   },
 ];
@@ -137,56 +137,56 @@ export const analysisRecommendations = [
 // ── 검사 결과 상세 ──
 export const inspectionDetails = {
   247: {
-    cam: "CAM-02", line: "B라인", detectionMethod: "자동 감지",
+    line: "B라인", detectionMethod: "자동 감지",
     shift: "야간",
     workerName: "김소희",
     originalImage: "/parts/frame-normal.png",
     gradcamImage: "/parts/frame-normal.png",
   },
   246: {
-    cam: "CAM-03", line: "A라인", detectionMethod: "자동 감지",
+    line: "A라인", detectionMethod: "자동 감지",
     shift: "주간",
     workerName: "김철수",
     originalImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBn15iBsYKdCLrLLVIdMbRCahxvhkyT-jJAouuJavUAONbTlC81UcEl-Tp_ot8Ymk6kCUrzRF4nU2wLSkgQ7JDIsibGI_x3s2cDMxrcPyyU6OxNBvWdMGawJATRPNhQ4GpGfuPJ8GfNVpLDhGZHOPRv8UKQ6-uJX6aLFk5MObyx1Rk_3O3rpgfYExMRzWTu4Vo8GFO6p73RvLuJorDCK5G4TNd5zdTzL39RuxY8h3rqaio1SIIG0JM44W0GwFmGmqwZ9lFlhTC8Jq8",
     gradcamImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBn15iBsYKdCLrLLVIdMbRCahxvhkyT-jJAouuJavUAONbTlC81UcEl-Tp_ot8Ymk6kCUrzRF4nU2wLSkgQ7JDIsibGI_x3s2cDMxrcPyyU6OxNBvWdMGawJATRPNhQ4GpGfuPJ8GfNVpLDhGZHOPRv8UKQ6-uJX6aLFk5MObyx1Rk_3O3rpgfYExMRzWTu4Vo8GFO6p73RvLuJorDCK5G4TNd5zdTzL39RuxY8h3rqaio1SIIG0JM44W0GwFmGmqwZ9lFlhTC8Jq8",
   },
   245: {
-    cam: "CAM-04", line: "B라인", detectionMethod: "자동 감지",
+    line: "B라인", detectionMethod: "자동 감지",
     shift: "주간",
     workerName: "대풍근",
     originalImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuCTsgMsao6Y0yFrryOjcI9n9z3IWvQW9JtZN1l0fRffoTt_ApywE4zL8WGxNzfXrcl5oLCwctAv6UsOf7qpnsQNAdM36OeaHa9wAuP8EM3MiT2_6eVEUR8AmY_p4fZfe_MQGY0Rrjv0zAYywaR9yMdJGNVUhvoFBHFvYZmgSpHKn_dH3Z47CIqLTITZvYW4r-K8o9vvy9mXow6BVt1NoqziIukFY2H4N5Z6zSuw7K4HWurSzy5Vl_CDUU7Ip3_ZnP7Es719gdbauJg",
     gradcamImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuCTsgMsao6Y0yFrryOjcI9n9z3IWvQW9JtZN1l0fRffoTt_ApywE4zL8WGxNzfXrcl5oLCwctAv6UsOf7qpnsQNAdM36OeaHa9wAuP8EM3MiT2_6eVEUR8AmY_p4fZfe_MQGY0Rrjv0zAYywaR9yMdJGNVUhvoFBHFvYZmgSpHKn_dH3Z47CIqLTITZvYW4r-K8o9vvy9mXow6BVt1NoqziIukFY2H4N5Z6zSuw7K4HWurSzy5Vl_CDUU7Ip3_ZnP7Es719gdbauJg",
   },
   244: {
-    cam: "CAM-01", line: "A라인", detectionMethod: "자동 감지",
+    line: "A라인", detectionMethod: "자동 감지",
     shift: "야간",
     workerName: "신동주",
     originalImage: "/parts/frame-normal.png",
     gradcamImage: "/parts/frame-normal.png",
   },
   243: {
-    cam: "CAM-02", line: "A라인", detectionMethod: "자동 감지",
+    line: "A라인", detectionMethod: "자동 감지",
     shift: "주간",
     workerName: "김철수",
     originalImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuD_TewelQ0qEhHYq_78uHst9o-oOdXrUDtZhNEyrEEHznO9C0eITWIQGb8uQ4UHNS08TJ_VPqYmdBqO9Uuabui8ktLvaUwRV_hdcBHG0gqhHmVYCzxZA9vMuOtK3gcPW6IkTPcK6slJprMCUHfWF-qneX_xuFRs8JsgzddKUygERVoCyrpqtotO9TjnJyzazzbXVpzMr0eFR43-tIr8dLUQMb-YdVEjX2E5T8pHrqB_TcBDckMn54N6r91W5Bzbz3jMd8M1jaqZFkc",
     gradcamImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuD_TewelQ0qEhHYq_78uHst9o-oOdXrUDtZhNEyrEEHznO9C0eITWIQGb8uQ4UHNS08TJ_VPqYmdBqO9Uuabui8ktLvaUwRV_hdcBHG0gqhHmVYCzxZA9vMuOtK3gcPW6IkTPcK6slJprMCUHfWF-qneX_xuFRs8JsgzddKUygERVoCyrpqtotO9TjnJyzazzbXVpzMr0eFR43-tIr8dLUQMb-YdVEjX2E5T8pHrqB_TcBDckMn54N6r91W5Bzbz3jMd8M1jaqZFkc",
   },
   242: {
-    cam: "CAM-03", line: "B라인", detectionMethod: "자동 감지",
+    line: "B라인", detectionMethod: "자동 감지",
     shift: "주간",
     workerName: "대풍근",
     originalImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBidQTY-xjd-WNMe3bW_kV1VcGe2QDQEp2PQeFPC1bDyra_pQwbPdJU4iB4bIm8bOKXwxZxiVZzNZwnYQoJP59RqGw6ZwFWWmHMdxbC-xaAluTFoJfOex6hblZLlpUr3s7s-RqlKqI02vW0MBxKqqLHzxBuEqV-bvrAAAJzYxAcEjMvVu421TjsWJ5o3XtWJB7dNVtRPeN5E_5ymt3LarztdtISxLqSGob_kL98Xk51HOX_hxXVdvhtBDYPb5fZ6szQjWgU5oIyTR0",
     gradcamImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBidQTY-xjd-WNMe3bW_kV1VcGe2QDQEp2PQeFPC1bDyra_pQwbPdJU4iB4bIm8bOKXwxZxiVZzNZwnYQoJP59RqGw6ZwFWWmHMdxbC-xaAluTFoJfOex6hblZLlpUr3s7s-RqlKqI02vW0MBxKqqLHzxBuEqV-bvrAAAJzYxAcEjMvVu421TjsWJ5o3XtWJB7dNVtRPeN5E_5ymt3LarztdtISxLqSGob_kL98Xk51HOX_hxXVdvhtBDYPb5fZ6szQjWgU5oIyTR0",
   },
   241: {
-    cam: "CAM-04", line: "C라인", detectionMethod: "자동 감지",
+    line: "C라인", detectionMethod: "자동 감지",
     shift: "야간",
     workerName: "김근호",
     originalImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBCrio6VIQH55KPpKDA6VGgkF1jbxwYL_ILzzbCxWKNP4K4Zce5RVVUl4XPgSPU_aJnvmaP0NBUm1lydgJWR6VbBBTcKQ5IyExEfLFAqC5ntajZTikhE83De63Bzw0GCJ-wkVGg4lRhF2pk1DIlKt9nUQBSXW77TLCPN9vSWkvbNn3cBcyUF8aQYiNAgRnKOR0aESl--E2ZFxMRNPhc52DZqjNey7tYFQN_aiCLdEPVD1qKEc_gSIGAeOxUsJFLyVETFUl3X3StGrs",
     gradcamImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuBCrio6VIQH55KPpKDA6VGgkF1jbxwYL_ILzzbCxWKNP4K4Zce5RVVUl4XPgSPU_aJnvmaP0NBUm1lydgJWR6VbBBTcKQ5IyExEfLFAqC5ntajZTikhE83De63Bzw0GCJ-wkVGg4lRhF2pk1DIlKt9nUQBSXW77TLCPN9vSWkvbNn3cBcyUF8aQYiNAgRnKOR0aESl--E2ZFxMRNPhc52DZqjNey7tYFQN_aiCLdEPVD1qKEc_gSIGAeOxUsJFLyVETFUl3X3StGrs",
   },
   240: {
-    cam: "CAM-01", line: "C라인", detectionMethod: "자동 감지",
+    line: "C라인", detectionMethod: "자동 감지",
     shift: "주간",
     workerName: "진성훈",
     originalImage: "/parts/frame-normal.png",

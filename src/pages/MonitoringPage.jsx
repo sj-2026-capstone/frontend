@@ -45,7 +45,7 @@ function inspectionRowsToDetections(rows) {
     id: row.id,
     time: formatDetectionTime(row.date),
     date: row.date,
-    cam: row.line || "-",
+    line: row.line || "-",
     part: row.part || "불량",
     status: row.status,
     image: row.image || "",
@@ -53,11 +53,16 @@ function inspectionRowsToDetections(rows) {
 }
 
 function mockDetectionsWithInspectionImages() {
-  return recentDetections.map((det) => ({
-    ...det,
-    id: det.inspectionId,
-    image: det.inspectionId ? inspectionDetails[det.inspectionId]?.originalImage || "" : det.image,
-  }));
+  return recentDetections.map((det) => {
+    const detail = det.inspectionId ? inspectionDetails[det.inspectionId] : null;
+
+    return {
+      ...det,
+      id: det.inspectionId,
+      line: det.line || detail?.line || "-",
+      image: det.inspectionId ? detail?.originalImage || "" : det.image,
+    };
+  });
 }
 
 function getRecentDefectDetections(detections) {
@@ -100,7 +105,7 @@ function DetectionStrip({ detections, compact = false }) {
               <div className="min-w-0 flex-1">
                 <div className="mb-1 flex items-center justify-between gap-2">
                   <span className="truncate text-[11px] font-bold text-on-surface-variant">
-                    {det.time} | {det.cam}
+                    {detectionMetaText(det)}
                   </span>
                   <span className="rounded bg-error/10 px-1.5 py-0.5 text-[10px] font-black text-error">
                     불량
@@ -119,6 +124,10 @@ function DetectionStrip({ detections, compact = false }) {
       </div>
     </section>
   );
+}
+
+function detectionMetaText(det) {
+  return [det.time, det.line].filter((item) => item && item !== "-").join(" | ") || "-";
 }
 
 export default function MonitoringPage() {

@@ -36,7 +36,7 @@ API 호출 코드는 `src/api/`에 둔다.
 - `accounts.js`: 계정 목록, 상세, 생성, 수정, 상태 변경, 요약, loginId 중복 확인
 - `lines.js`: 라인 목록과 라인 상세 조회
 - `shifts.js`: 교대조 목록, 상세, 배정 조회
-- `inspections.js`: 검사 목록, 상세, 상태 조회, 조치 완료 처리, 분석 시작
+- `inspections.js`: 검사 목록, 상세, 상태 조회, 불량 유형 보고와 조치 완료 처리, 분석 시작
 - `notifications.js`: 알림 목록, 미확인 개수, 읽음 처리, 전체 읽음, SSE 구독
 - `dashboard.js`: 관리자 대시보드 통합 조회
 
@@ -48,7 +48,7 @@ API 응답은 화면에서 직접 쓰지 않고 `src/adapters/`에서 기존 화
 
 - `adapters/accounts.js`: 계정 목록 응답을 `name`, `userId`, `role`, `line`, `shift` row 형태로 변환
 - `adapters/dashboard.js`: `summary`, `actionSummary`, `defectRateTrend`, `lineDefectRates`를 KPI, 추이, 조치 현황, 라인별 불량률 형태로 변환한다. 조치 현황은 `total`, `unresolvedCount`, `resolvedCount`, `completionRate`를 우선 사용한다.
-- `adapters/inspections.js`: 검사 목록/상세 응답을 이력 row와 상세 화면 데이터로 변환하고, 백엔드 이미지 경로를 API base URL 기준으로 정규화한다. 검사 결과(`status`, `hasDefect`)와 조치 상태(`actionStatus`)는 별도 필드로 유지한다.
+- `adapters/inspections.js`: 검사 목록/상세 응답을 이력 row와 상세 화면 데이터로 변환하고, 백엔드 이미지 경로를 API base URL 기준으로 정규화한다. 검사 결과(`status`, `hasDefect`), 조치 상태(`actionStatus`), 작업자가 보고한 불량 유형(`defectType`)은 별도 필드로 유지한다.
 - `adapters/lines.js`: 라인 응답을 A-D 공장 도면 라인 상태로 변환하고, 알림 이벤트로 특정 라인을 alarm 상태로 갱신
 - `adapters/notifications.js`: 알림 목록 응답을 `alertsData`와 호환되는 형태로 변환
 
@@ -70,9 +70,9 @@ mock 모드에서는 역할 선택 로그인으로 동작한다. API 모드에�
 
 - 로그인: mock 모드에서는 worker/admin 역할 선택, API 모드에서는 백엔드 로그인 호출 후 admin은 `/dashboard`, 그 외 역할은 `/monitoring`으로 이동
 - 대시보드: `GET /api/dashboard`로 KPI, 최근 7일 불량률 추이, 조치 현황, 라인별 불량률을 표시한다. `actionSummary`는 전체 불량, 미처리, 조치 완료, 처리율로 표시한다. 불량률 추이는 SVG 기반 고해상도 라인 차트로 그리며 축 눈금, 평균선, 값 라벨, 면 그래디언트를 함께 표시한다.
-- 실시간 모니터링: `GET /api/lines`로 라인 상태를 조회하고, 공장 도면 대신 CCTV 카메라 피드형 화면으로 A라인 도어, B라인 범퍼, C라인 프레임 검사 영상을 표시한다. `GET /api/inspections?page=0&size=50&status=DONE` 결과에서 최근 불량 감지 내역을 compact 패널로 함께 표시한다.
+- 실시간 모니터링: `GET /api/lines`로 라인 상태를 조회하고, 공장 도면 대신 검사 영상 피드형 화면으로 A라인 도어, B라인 범퍼, C라인 프레임 검사 영상을 표시한다. `GET /api/inspections?page=0&size=50&status=DONE` 결과에서 최근 불량 감지 내역을 compact 패널로 함께 표시한다.
 - 실시간 모니터링 알림 반영: `GET /api/notifications/subscribe` SSE를 구독하고 `notification` 이벤트가 불량 감지 알림이면 해당 라인을 alarm 상태로 갱신한다. 알림에서 라인을 식별하지 못하면 라인 목록을 다시 조회한다.
-- 검사 상세: `GET /api/inspections/:inspectionId`로 원본 이미지, Grad-CAM 이미지, 부품/라인/카메라/불량 유형 메타데이터를 표시한다. confidence 값은 화면에 표시하지 않는다. 불량 검사에서 조치 완료 버튼을 누르면 `PATCH /api/inspections/:inspectionId/action`을 호출하고 성공 시 화면 상태를 조치완료로 갱신한다.
+- 검사 상세: `GET /api/inspections/:inspectionId`로 원본 이미지, AI 분석 이미지, 부품/라인/불량 유형 메타데이터를 표시한다. confidence 값은 화면에 표시하지 않는다. 불량 검사에서는 작업자가 불량 유형을 선택한 뒤 보고 제출 버튼을 누르면 `PATCH /api/inspections/:inspectionId/action`에 `{ defectType }`을 함께 보내고, 성공 시 화면 상태를 조치완료로 갱신한다.
 - 검사 이력: `GET /api/inspections`를 페이지네이션, 라인, 상태 필터와 함께 호출한다. 상태 필터 값은 `PENDING`, `PROCESSING`, `DONE`, `FAILED`를 사용한다. 응답의 `actionStatus`가 `UNRESOLVED`면 미처리, `RESOLVED`면 조치완료로 표시한다.
 - 알림: `GET /api/notifications`, `GET /api/notifications/unread-count`, `PATCH /api/notifications/:id/read`, `PATCH /api/notifications/read-all`을 사용한다. 전체/미확인/확인완료 탭을 제공한다.
 - 계정 관리: 계정 목록, 계정 요약, 라인, 교대조를 함께 조회한다. 계정 생성 폼은 필수값, 비밀번호 8자 이상, 비밀번호 확인, 작업자 라인/교대조 선택을 검증한다.
@@ -108,5 +108,6 @@ API 실패 시 앱 전체가 흰 화면으로 죽지 않도록, 연결된 화면
 - Field worker real-time defect notification flow has been manually confirmed.
 - Admin dashboard subscribes to the same notification SSE and shows a top defect alert panel when a defect notification is received. The old manual alert demo button has been removed.
 - Monitoring recent defect detections use inspection image URLs instead of a hard-coded mock thumbnail. If the list response does not include an image, the page fetches the recent defect inspection details and uses the same original image shown on `/inspection/:id`; mock mode also links defect detections to `inspectionDetails[inspectionId].originalImage`.
+- Inspection detail defect reports use defect type options collected from `C:\Users\dydwn\Desktop\Capstone\차 부품 정상 불량\새 폴더` subfolder names. The current options are `스크래치`, `외관손상`, `단차`, `장착불량`, `고정핀`, `연계`, `유격`, `체결`, `실링`, `외관`, `헤밍`, `홀`, `외관 손상`.
 - Next manual verification target is the admin flow: `/dashboard`, `/accounts`, `/analysis`, `/alerts`, and shared `/history`.
 - mock 모드에서 worker/admin 로그인과 주요 화면이 기존 mock 데이터로 열리는지 확인
