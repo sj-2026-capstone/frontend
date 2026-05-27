@@ -54,6 +54,7 @@ export function inspectionResponseToHistoryRow(item) {
   const inspectionId = item.inspectionId ?? item.id;
   const status = mapInspectionStatus(item);
   const line = item.lineName || item.lineCode || item.lineId || "-";
+  const actionStatus = mapActionStatus(item, status);
 
   return {
     id: inspectionId,
@@ -62,27 +63,14 @@ export function inspectionResponseToHistoryRow(item) {
     line,
     part: status === "defect" || status === "failed" ? "불량" : "정상",
     status,
+    image: resolveBackendImageUrl(getOriginalImage(item)) || "",
+    actionStatus,
     rawStatus: item.status || "-",
   };
 }
 
 export function inspectionResponseToDetail(item) {
   const result = getInspectionResult(item);
-  const originalImage =
-    item.originalImageUrl ||
-    item.imageUrl ||
-    item.frameImageUrl ||
-    result.originalImageUrl ||
-    result.imageUrl;
-  const gradcamImage =
-    item.gradCamImageUrl ||
-    item.gradcamImageUrl ||
-    item.resultImageUrl ||
-    result.gradCamImageUrl ||
-    result.gradcamImageUrl ||
-    result.resultImageUrl ||
-    result.heatmapImageUrl ||
-    item.imageUrl;
 
   return {
     cam: item.cameraId || item.cameraName || item.deviceId || "-",
@@ -104,8 +92,8 @@ export function inspectionResponseToDetail(item) {
         result.userName
       ) || "-",
     detectionMethod: "Backend API",
-    originalImage: resolveBackendImageUrl(originalImage) || "/parts/frame-normal.png",
-    gradcamImage: resolveBackendImageUrl(gradcamImage) || "/parts/frame-normal.png",
+    originalImage: resolveBackendImageUrl(getOriginalImage(item)) || "/parts/frame-normal.png",
+    gradcamImage: resolveBackendImageUrl(getGradcamImage(item)) || "/parts/frame-normal.png",
   };
 }
 
@@ -151,8 +139,41 @@ function mapInspectionStatus(item) {
   return status.toLowerCase() || "normal";
 }
 
+function mapActionStatus(item, status) {
+  const actionStatus = String(item.actionStatus || "").toUpperCase();
+  if (actionStatus) return actionStatus;
+  if (status === "resolved") return "RESOLVED";
+  if (status === "defect") return "UNRESOLVED";
+  return "";
+}
+
 function getInspectionResult(item) {
   return item.result || item.analysisResult || item.inspectionResult || item.frameResult || item.aiResult || {};
+}
+
+function getOriginalImage(item) {
+  const result = getInspectionResult(item);
+  return (
+    item.originalImageUrl ||
+    item.imageUrl ||
+    item.frameImageUrl ||
+    result.originalImageUrl ||
+    result.imageUrl
+  );
+}
+
+function getGradcamImage(item) {
+  const result = getInspectionResult(item);
+  return (
+    item.gradCamImageUrl ||
+    item.gradcamImageUrl ||
+    item.resultImageUrl ||
+    result.gradCamImageUrl ||
+    result.gradcamImageUrl ||
+    result.resultImageUrl ||
+    result.heatmapImageUrl ||
+    item.imageUrl
+  );
 }
 
 function pickText(...values) {

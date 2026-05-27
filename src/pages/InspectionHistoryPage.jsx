@@ -184,9 +184,9 @@ export default function InspectionHistoryPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    {actionStatusLabel(row.status) && (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${actionStatusClassName(row.status)}`}>
-                        {actionStatusLabel(row.status)}
+                    {actionStatusLabel(row.actionStatus || row.status) && (
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${actionStatusClassName(row.actionStatus || row.status)}`}>
+                        {actionStatusLabel(row.actionStatus || row.status)}
                       </span>
                     )}
                   </td>
@@ -287,14 +287,14 @@ function resultClassName(status) {
   return "bg-surface-container-high text-on-surface-variant";
 }
 
-function actionStatusLabel(status) {
-  if (status === "defect") return "미처리";
-  if (status === "resolved") return "조치완료";
+function actionStatusLabel(actionStatus) {
+  if (actionStatus === "UNRESOLVED" || actionStatus === "defect") return "미처리";
+  if (actionStatus === "RESOLVED" || actionStatus === "resolved") return "조치완료";
   return "";
 }
 
-function actionStatusClassName(status) {
-  return status === "defect"
+function actionStatusClassName(actionStatus) {
+  return actionStatus === "UNRESOLVED" || actionStatus === "defect"
     ? "bg-error-container text-on-error-container"
     : "bg-green-100 text-green-700";
 }

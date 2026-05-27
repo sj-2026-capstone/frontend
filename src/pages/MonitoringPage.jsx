@@ -4,11 +4,13 @@ import Icon from "../components/Icon";
 import FactoryFloorMap from "../components/FactoryFloorMap";
 import { USE_MOCK_API } from "../api/config";
 import { getLines } from "../api/lines";
-import { getInspections } from "../api/inspections";
+import { getInspection, getInspections } from "../api/inspections";
 import { subscribeNotifications } from "../api/notifications";
 import { applyLineAlarmNotification, linesResponseToFactoryLines, mockFactoryLineView } from "../adapters/lines";
-import { inspectionPageResponseToHistoryPage } from "../adapters/inspections";
-import { recentDetections } from "../data/mockData";
+import { inspectionPageResponseToHistoryPage, inspectionResponseToDetail } from "../adapters/inspections";
+import { inspectionDetails, recentDetections } from "../data/mockData";
+
+const FALLBACK_DETECTION_IMAGE = "/parts/frame-normal.png";
 
 function isDefectDetection(det) {
   const status = String(det.status || "").toLowerCase();
@@ -40,12 +42,21 @@ function formatDetectionTime(value) {
 
 function inspectionRowsToDetections(rows) {
   return rows.map((row) => ({
+    id: row.id,
     time: formatDetectionTime(row.date),
     date: row.date,
     cam: row.line || "-",
     part: row.part || "불량",
     status: row.status,
-    image: "/parts/frame-normal.png",
+    image: row.image || "",
+  }));
+}
+
+function mockDetectionsWithInspectionImages() {
+  return recentDetections.map((det) => ({
+    ...det,
+    id: det.inspectionId,
+    image: det.inspectionId ? inspectionDetails[det.inspectionId]?.originalImage || "" : det.image,
   }));
 }
 
@@ -78,12 +89,12 @@ function DetectionStrip({ detections, compact = false }) {
       <div className={compact ? "space-y-2" : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5"}>
         {visibleDetections.map((det, index) => (
           <div
-            key={`${det.time}-${index}`}
+            key={`${det.id || det.time}-${index}`}
             className={`rounded-lg border border-outline-variant/20 bg-white shadow-sm ${compact ? "p-2" : "p-3"}`}
           >
             <div className="flex items-center gap-3">
               <div className={`relative flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-highest ${compact ? "h-11 w-11" : "h-14 w-14"}`}>
-                <img className="h-full w-full object-cover" src={det.image} alt={det.part} />
+                <img className="h-full w-full object-cover" src={det.image || FALLBACK_DETECTION_IMAGE} alt={det.part} />
                 <div className="absolute inset-0 bg-error/15" />
               </div>
               <div className="min-w-0 flex-1">
@@ -113,7 +124,7 @@ function DetectionStrip({ detections, compact = false }) {
 export default function MonitoringPage() {
   const navigate = useNavigate();
   const [lines, setLines] = useState(() => (USE_MOCK_API ? mockFactoryLineView() : []));
-  const [detections, setDetections] = useState(() => (USE_MOCK_API ? recentDetections : []));
+  const [detections, setDetections] = useState(() => (USE_MOCK_API ? mockDetectionsWithInspectionImages() : []));
   const linesRef = useRef(lines);
   const [apiError, setApiError] = useState("");
 
@@ -148,14 +159,39 @@ export default function MonitoringPage() {
     let ignore = false;
 
     getInspections({ page: 0, size: 50, status: "DONE" })
-      .then((data) => {
+      .then(async (data) => {
         if (ignore) return;
 
         const pageData = inspectionPageResponseToHistoryPage(data, {
           number: 0,
           size: 50,
         });
-        setDetections(inspectionRowsToDetections(pageData.rows));
+        const nextDetections = inspectionRowsToDetections(pageData.rows);
+        const recentDefects = getRecentDefectDetections(nextDetections);
+        const missingImageDefects = recentDefects.filter((det) => det.id && !det.image);
+
+        if (!missingImageDefects.length) {
+          setDetections(nextDetections);
+          return;
+        }
+
+        const imageEntries = await Promise.all(
+          missingImageDefects.map((det) =>
+            getInspection(det.id)
+              .then((detail) => [det.id, inspectionResponseToDetail(detail).originalImage])
+              .catch(() => null)
+          )
+        );
+        if (ignore) return;
+
+        const imageByInspectionId = new Map(imageEntries.filter(Boolean));
+        setDetections(
+          nextDetections.map((det) =>
+            imageByInspectionId.has(det.id)
+              ? { ...det, image: imageByInspectionId.get(det.id) }
+              : det
+          )
+        );
       })
       .catch((err) => {
         if (!ignore) {

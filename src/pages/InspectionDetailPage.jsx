@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import { API_BASE_URL, USE_MOCK_API } from "../api/config";
 import { apiBlobRequest } from "../api/client";
-import { getInspection } from "../api/inspections";
+import { completeInspectionAction, getInspection } from "../api/inspections";
 import { inspectionResponseToDetail, inspectionResponseToHistoryRow } from "../adapters/inspections";
 import { inspectionHistory, inspectionDetails } from "../data/mockData";
 
@@ -14,6 +14,7 @@ export default function InspectionDetailPage() {
   const [cancelled, setCancelled] = useState(false);
   const [apiRecord, setApiRecord] = useState(null);
   const [apiError, setApiError] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
   const [imageSources, setImageSources] = useState({
     originalImageUrl: "",
     gradcamImageUrl: "",
@@ -124,10 +125,44 @@ export default function InspectionDetailPage() {
     );
   }
 
-  const isDefect = inspection.status === "defect";
-  const isResolved = inspection.status === "resolved" && !cancelled;
-  const effectivelyDefect = isDefect || (inspection.status === "resolved" && cancelled);
-  const resultText = effectivelyDefect || isResolved ? "불량 감지" : "이상 없음";
+  const isDefect =
+    inspection.status === "defect" ||
+    inspection.status === "resolved" ||
+    inspection.actionStatus === "UNRESOLVED" ||
+    inspection.actionStatus === "RESOLVED";
+  const isResolved = (confirmed || inspection.actionStatus === "RESOLVED" || inspection.status === "resolved") && !cancelled;
+  const effectivelyDefect = isDefect && !isResolved;
+  const resultText = isDefect || isResolved ? "불량 감지" : "이상 없음";
+
+  const handleCompleteAction = async () => {
+    if (USE_MOCK_API) {
+      setConfirmed(true);
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      await completeInspectionAction(id);
+      setApiRecord((prev) =>
+        prev
+          ? {
+              ...prev,
+              inspection: {
+                ...prev.inspection,
+                actionStatus: "RESOLVED",
+              },
+            }
+          : prev
+      );
+      setConfirmed(true);
+      setCancelled(false);
+      setApiError("");
+    } catch (err) {
+      setApiError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-3xl md:max-w-[1600px] mx-auto space-y-4 md:space-y-6">
@@ -253,23 +288,23 @@ export default function InspectionDetailPage() {
         {(effectivelyDefect || isResolved) && (
           <>
             <button
-              disabled={confirmed || isResolved}
+              disabled={actionLoading || confirmed || isResolved}
               className={`w-full md:w-auto flex-1 md:flex-none py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${
-                confirmed || isResolved
+                actionLoading || confirmed || isResolved
                   ? "bg-blue-100 text-blue-700 border-2 border-blue-300 cursor-default"
                   : "bg-green-600 text-white hover:bg-green-700"
               }`}
-              onClick={() => setConfirmed(true)}
+              onClick={handleCompleteAction}
             >
               <Icon name={confirmed || isResolved ? "check_circle" : "task_alt"} />
-              {confirmed || isResolved ? "조치완료됨" : "조치완료"}
+              {actionLoading ? "처리 중" : confirmed || isResolved ? "조치완료됨" : "조치완료"}
             </button>
-            {(confirmed || isResolved) && (
+            {USE_MOCK_API && (confirmed || isResolved) && (
               <button
                 className="w-full md:w-auto border-2 border-outline-variant text-on-surface-variant py-4 px-8 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-surface-container transition-all active:scale-95"
                 onClick={() => {
-                  if (isResolved) setCancelled(true);
-                  else setConfirmed(false);
+                  setConfirmed(false);
+                  setCancelled(inspection.status === "resolved" || inspection.actionStatus === "RESOLVED");
                 }}
               >
                 <Icon name="cancel" />

@@ -6,15 +6,68 @@ import { getDashboard } from "../api/dashboard";
 import { subscribeNotifications } from "../api/notifications";
 import { dashboardResponseToView, mockDashboardView } from "../adapters/dashboard";
 
-function buildTrendPoints(items) {
-  const width = 700;
-  const height = 200;
-  const max = Math.max(...items.map((item) => item.value), 10);
-  return items.map((item, index) => {
-    const x = items.length === 1 ? width / 2 : (width / (items.length - 1)) * index;
-    const y = height - (item.value / max) * (height - 30) - 15;
-    return [x, y];
+const TREND_CHART = {
+  width: 760,
+  height: 300,
+  top: 28,
+  right: 34,
+  bottom: 48,
+  left: 54,
+};
+
+function formatTrendRate(value) {
+  const rounded = Number(value || 0);
+  return `${rounded >= 10 ? rounded.toFixed(0) : rounded.toFixed(1)}%`;
+}
+
+function buildSmoothPath(points) {
+  if (!points.length) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+
+  return points.reduce((path, point, index) => {
+    if (index === 0) return `M ${point.x} ${point.y}`;
+
+    const previous = points[index - 1];
+    const controlX = (previous.x + point.x) / 2;
+    return `${path} C ${controlX} ${previous.y}, ${controlX} ${point.y}, ${point.x} ${point.y}`;
+  }, "");
+}
+
+function buildTrendChart(items) {
+  const plotWidth = TREND_CHART.width - TREND_CHART.left - TREND_CHART.right;
+  const plotHeight = TREND_CHART.height - TREND_CHART.top - TREND_CHART.bottom;
+  const plotBottom = TREND_CHART.height - TREND_CHART.bottom;
+  const values = items.map((item) => Number(item.value || 0));
+  const maxValue = Math.max(...values, 0);
+  const tickMax = Math.max(5, Math.ceil(maxValue / 5) * 5);
+
+  const points = items.map((item, index) => {
+    const value = Number(item.value || 0);
+    const x = items.length === 1
+      ? TREND_CHART.left + plotWidth / 2
+      : TREND_CHART.left + (plotWidth / (items.length - 1)) * index;
+    const y = plotBottom - (value / tickMax) * plotHeight;
+
+    return { ...item, value, x, y };
   });
+
+  const linePath = buildSmoothPath(points);
+  const areaPath = points.length
+    ? `${linePath} L ${points[points.length - 1].x} ${plotBottom} L ${points[0].x} ${plotBottom} Z`
+    : "";
+  const ticks = Array.from({ length: 5 }, (_, index) => {
+    const value = tickMax - (tickMax / 4) * index;
+    return {
+      value,
+      y: TREND_CHART.top + (plotHeight / 4) * index,
+    };
+  });
+  const average = values.length
+    ? values.reduce((sum, value) => sum + value, 0) / values.length
+    : 0;
+  const averageY = plotBottom - (average / tickMax) * plotHeight;
+
+  return { areaPath, average, averageY, linePath, points, ticks };
 }
 
 function unwrapNotification(notification) {
@@ -97,15 +150,12 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const trendPoints = useMemo(
-    () => buildTrendPoints(dashboard.defectTrendData),
+  const trendChart = useMemo(
+    () => buildTrendChart(dashboard.defectTrendData),
     [dashboard.defectTrendData]
   );
-  const trendPath = trendPoints
-    .map(([x, y], index) => `${index === 0 ? "M" : "L"}${x},${y}`)
-    .join(" ");
   const actionTotal = Math.max(dashboard.actionStatus.total, 1);
-  const actionCompletionRate = Math.round(
+  const actionCompletionRate = dashboard.actionStatus.completionRate || Math.round(
     (dashboard.actionStatus.resolved / actionTotal) * 100
   );
   const lastUpdatedAt = dashboard.lastUpdatedAt
@@ -240,55 +290,136 @@ export default function DashboardPage() {
 
       {/* ── Line Chart: 불량률 추이 ── */}
       <div className="bg-surface-container-lowest p-8 rounded-lg shadow-sm mb-8">
-        <div className="flex justify-between items-end mb-8">
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div>
             <h2 className="font-headline text-xl font-bold tracking-tight text-primary">
               불량률 추이 (최근 7일)
             </h2>
             <p className="text-sm text-slate-500">일별 품질 지표 변동 현황</p>
           </div>
-          <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-            <div className="flex items-center gap-1">
-              <span className="w-3 h-3 bg-[#022448] rounded-full" />
-              <span>불량률 (%)</span>
+          <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-500">
+            <div className="flex items-center gap-2 rounded-full bg-surface-container-low px-3 py-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#1E3A5F]" />
+              <span>불량률</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-full bg-surface-container-low px-3 py-1.5">
+              <span className="h-px w-5 border-t border-dashed border-[#C47A00]" />
+              <span>평균 {formatTrendRate(trendChart.average)}</span>
             </div>
           </div>
         </div>
 
-        <div className="h-64 flex items-end gap-1 relative pt-4">
-          {/* Grid lines */}
-          <div className="absolute inset-0 border-b border-surface-container flex flex-col justify-between opacity-50">
-            <div className="border-t border-surface-container w-full h-0" />
-            <div className="border-t border-surface-container w-full h-0" />
-            <div className="border-t border-surface-container w-full h-0" />
-            <div className="border-t border-surface-container w-full h-0" />
-          </div>
-
-          {/* SVG Line */}
+        <div className="mt-7">
           <svg
-            className="absolute inset-0 w-full h-full overflow-visible"
-            preserveAspectRatio="none"
-            viewBox="0 0 700 200"
+            aria-label="최근 7일 불량률 추이 그래프"
+            className="h-[340px] w-full"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            viewBox={`0 0 ${TREND_CHART.width} ${TREND_CHART.height}`}
           >
+            <defs>
+              <linearGradient id="defectTrendFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#1E3A5F" stopOpacity="0.24" />
+                <stop offset="100%" stopColor="#1E3A5F" stopOpacity="0" />
+              </linearGradient>
+              <filter id="defectTrendShadow" x="-8%" y="-20%" width="116%" height="150%">
+                <feDropShadow dx="0" dy="7" floodColor="#0F2D4E" floodOpacity="0.14" stdDeviation="6" />
+              </filter>
+            </defs>
+
+            {trendChart.ticks.map((tick) => (
+              <g key={tick.value}>
+                <line
+                  stroke="#E6E8EB"
+                  strokeDasharray={tick.value === 0 ? "0" : "4 8"}
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                  x1={TREND_CHART.left}
+                  x2={TREND_CHART.width - TREND_CHART.right}
+                  y1={tick.y}
+                  y2={tick.y}
+                />
+                <text
+                  className="fill-slate-400 text-[11px] font-bold"
+                  textAnchor="end"
+                  x={TREND_CHART.left - 14}
+                  y={tick.y + 4}
+                >
+                  {formatTrendRate(tick.value)}
+                </text>
+              </g>
+            ))}
+
+            {trendChart.areaPath && (
+              <path d={trendChart.areaPath} fill="url(#defectTrendFill)" />
+            )}
+
+            {trendChart.points.length > 0 && (
+              <>
+                <line
+                  stroke="#C47A00"
+                  strokeDasharray="6 7"
+                  strokeLinecap="round"
+                  strokeWidth="1.5"
+                  vectorEffect="non-scaling-stroke"
+                  x1={TREND_CHART.left}
+                  x2={TREND_CHART.width - TREND_CHART.right}
+                  y1={trendChart.averageY}
+                  y2={trendChart.averageY}
+                />
+                <text
+                  className="fill-[#9A5F00] text-[11px] font-extrabold"
+                  x={TREND_CHART.width - TREND_CHART.right - 4}
+                  y={trendChart.averageY - 8}
+                  textAnchor="end"
+                >
+                  평균 {formatTrendRate(trendChart.average)}
+                </text>
+              </>
+            )}
+
             <path
-              d={trendPath}
+              d={trendChart.linePath}
               fill="none"
               stroke="#1E3A5F"
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth="4"
+              strokeWidth="3.5"
+              filter="url(#defectTrendShadow)"
+              vectorEffect="non-scaling-stroke"
             />
-            {trendPoints.map(([cx, cy]) => (
-              <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="4" fill="#1E3A5F" />
+
+            {trendChart.points.map((point, index) => (
+              <g key={`${point.date}-${index}`}>
+                <circle cx={point.x} cy={point.y} fill="#FFFFFF" r="7" />
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  fill="#1E3A5F"
+                  r="4"
+                  stroke="#FFFFFF"
+                  strokeWidth="2"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <text
+                  className="fill-primary text-[12px] font-extrabold"
+                  textAnchor="middle"
+                  x={point.x}
+                  y={point.y - 14}
+                >
+                  {formatTrendRate(point.value)}
+                </text>
+                <text
+                  className="fill-slate-500 text-[11px] font-bold"
+                  textAnchor="middle"
+                  x={point.x}
+                  y={TREND_CHART.height - 16}
+                >
+                  {point.date}
+                </text>
+              </g>
             ))}
           </svg>
-
-          {/* Date labels */}
-          <div className="absolute bottom-[-24px] w-full flex justify-between px-2 text-[10px] font-bold text-slate-400">
-            {dashboard.defectTrendData.map((d) => (
-              <span key={d.date}>{d.date}</span>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -322,29 +453,24 @@ export default function DashboardPage() {
                 className="h-full bg-primary rounded-l-full transition-all"
                 style={{ width: `${(dashboard.actionStatus.resolved / actionTotal) * 100}%` }}
               />
-              <div
-                className="h-full bg-blue-300"
-                style={{ width: `${(dashboard.actionStatus.inProgress / actionTotal) * 100}%` }}
-              />
             </div>
             <div className="flex gap-4 mt-2 text-[10px] font-bold text-slate-400">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" />조치 완료</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-300 inline-block" />조치 중</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-surface-container-high inline-block" />미처리</span>
             </div>
           </div>
 
           {/* 3개 상태 카드 */}
           <div className="grid grid-cols-3 gap-4 mt-auto">
+            <div className="bg-surface-container-low border border-surface-container-high rounded-xl p-4 text-center">
+              <Icon name="fact_check" className="text-primary text-2xl mb-1" />
+              <div className="font-headline text-2xl font-extrabold text-primary">{dashboard.actionStatus.total}</div>
+              <div className="text-[11px] font-bold text-on-surface-variant mt-0.5">전체 불량</div>
+            </div>
             <div className="bg-error/5 border border-error/20 rounded-xl p-4 text-center">
               <Icon name="report" className="text-error text-2xl mb-1" />
               <div className="font-headline text-2xl font-extrabold text-error">{dashboard.actionStatus.pending}</div>
               <div className="text-[11px] font-bold text-error/70 mt-0.5">미처리</div>
-            </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
-              <Icon name="engineering" className="text-blue-500 text-2xl mb-1" />
-              <div className="font-headline text-2xl font-extrabold text-blue-600">{dashboard.actionStatus.inProgress}</div>
-              <div className="text-[11px] font-bold text-blue-400 mt-0.5">조치 중</div>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
               <Icon name="check_circle" className="text-green-600 text-2xl mb-1" />

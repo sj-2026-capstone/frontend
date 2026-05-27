@@ -14,13 +14,13 @@ export const kpiData = [
 ];
 
 export const defectTrendData = [
-  { date: "3/17", value: 150 },
-  { date: "3/18", value: 120 },
-  { date: "3/19", value: 140 },
-  { date: "3/20", value: 80 },
-  { date: "3/21", value: 100 },
-  { date: "3/22", value: 90 },
-  { date: "3/23", value: 70 },
+  { date: "3/17", value: 5.8 },
+  { date: "3/18", value: 5.2 },
+  { date: "3/19", value: 5.5 },
+  { date: "3/20", value: 4.7 },
+  { date: "3/21", value: 4.9 },
+  { date: "3/22", value: 4.5 },
+  { date: "3/23", value: 4.2 },
 ];
 
 export const actionStatus = {
@@ -46,7 +46,7 @@ export const cameraFeeds = [
 
 export const recentDetections = [
   {
-    time: "14:32:05", cam: "CAM-01", part: "도어", status: "defect",
+    inspectionId: 247, time: "14:32:05", cam: "CAM-01", part: "도어", status: "defect",
     image: "/parts/frame-normal.png",
   },
   {

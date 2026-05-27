@@ -51,9 +51,10 @@ export function dashboardResponseToView(response, fallback = {}) {
       : fallback.defectTrendData ?? defectTrendData,
     actionStatus: {
       total: Number(actionSummary.total || 0),
-      pending: Number(actionSummary.pendingCount || 0),
+      pending: Number(actionSummary.unresolvedCount ?? actionSummary.pendingCount ?? 0),
       inProgress: Number(actionSummary.inProgressCount || 0),
-      resolved: Number(actionSummary.completedCount || 0),
+      resolved: Number(actionSummary.resolvedCount ?? actionSummary.completedCount ?? 0),
+      completionRate: Number(actionSummary.completionRate || 0),
     },
     linePerformance: response?.lineDefectRates?.length
       ? response.lineDefectRates.map((item) => {
