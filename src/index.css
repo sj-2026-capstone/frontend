@@ -65,6 +65,50 @@ body {
   animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+.analysis-grid {
+  background-image:
+    linear-gradient(rgba(125, 211, 252, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 211, 252, 0.08) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.9), transparent 82%);
+}
+
+.analysis-buffer {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  transform-origin: center;
+}
+
+.analysis-buffer span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  margin-top: -3.5px;
+  border-radius: 9999px;
+  background: rgba(165, 243, 252, 0.18);
+  transform:
+    rotate(calc(var(--buffer-index) * 30deg))
+    translateY(-26px);
+}
+
+.analysis-buffer--active {
+  animation: analysis-buffer-spin 2s linear infinite;
+}
+
+.analysis-buffer--active span:nth-child(1) { background: rgba(165, 243, 252, 1); }
+.analysis-buffer--active span:nth-child(2) { background: rgba(165, 243, 252, 0.82); }
+.analysis-buffer--active span:nth-child(3) { background: rgba(165, 243, 252, 0.66); }
+.analysis-buffer--active span:nth-child(4) { background: rgba(165, 243, 252, 0.5); }
+.analysis-buffer--active span:nth-child(5) { background: rgba(165, 243, 252, 0.36); }
+
+@keyframes analysis-buffer-spin {
+  to { transform: rotate(360deg); }
+}
+
 @keyframes factory-line-pulse {
   0%, 100% { opacity: 0.52; }
   50% { opacity: 1; }
@@ -169,6 +213,7 @@ body {
   .cctv-feed-card,
   .cctv-live-dot,
   .cctv-video-image,
+  .analysis-buffer--active,
   .animate-status-pulse,
   .animate-slide-in,
   .animate-ken-burns {
