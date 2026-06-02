@@ -69,6 +69,22 @@ export const recentDetections = [
 
 // ── 검사 이력 ──
 export const inspectionHistory = [
+  { id: 50, partId: "INSP-50", date: "2026.05.17 10:30", part: "카울커버", status: "resolved", line: "C라인" },
+  { id: 49, partId: "INSP-49", date: "2026.05.17 10:30", part: "라디에이터 그릴", status: "normal", line: "C라인" },
+  { id: 48, partId: "INSP-48", date: "2026.05.17 10:29", part: "테일 램프", status: "normal", line: "C라인" },
+  { id: 47, partId: "INSP-47", date: "2026.05.17 10:28", part: "휀더", status: "defect", line: "C라인" },
+  { id: 46, partId: "INSP-46", date: "2026.05.17 10:28", part: "도어", status: "normal", line: "C라인" },
+  { id: 45, partId: "INSP-45", date: "2026.05.16 10:27", part: "범퍼", status: "normal", line: "C라인" },
+  { id: 44, partId: "INSP-44", date: "2026.05.16 10:27", part: "헤드램프", status: "defect", line: "C라인" },
+  { id: 43, partId: "INSP-43", date: "2026.05.16 10:26", part: "프레임", status: "normal", line: "C라인" },
+  { id: 42, partId: "INSP-42", date: "2026.05.16 10:25", part: "카울커버", status: "normal", line: "C라인" },
+  { id: 41, partId: "INSP-41", date: "2026.05.15 10:25", part: "라디에이터 그릴", status: "normal", line: "C라인" },
+  { id: 40, partId: "INSP-40", date: "2026.05.15 10:24", part: "테일 램프", status: "resolved", line: "C라인" },
+  { id: 39, partId: "INSP-39", date: "2026.05.15 10:24", part: "휀더", status: "normal", line: "C라인" },
+  { id: 38, partId: "INSP-38", date: "2026.05.14 10:23", part: "도어", status: "normal", line: "C라인" },
+  { id: 37, partId: "INSP-37", date: "2026.05.14 10:22", part: "범퍼", status: "normal", line: "C라인" },
+  { id: 36, partId: "INSP-36", date: "2026.05.14 10:22", part: "헤드램프", status: "resolved", line: "C라인" },
+  { id: 35, partId: "INSP-35", date: "2026.05.14 10:21", part: "프레임", status: "normal", line: "C라인" },
   { id: 247, partId: "DOOR-0247", date: "2026.03.28 14:30", part: "도어",           status: "defect" },
   { id: 246, partId: "BUMP-0246", date: "2026.03.28 14:15", part: "범퍼",           status: "normal" },
   { id: 245, partId: "HEAD-0245", date: "2026.03.28 13:55", part: "헤드램프",       status: "normal" },
@@ -136,6 +152,22 @@ export const analysisRecommendations = [
 
 // ── 검사 결과 상세 ──
 export const inspectionDetails = {
+  50: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  49: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  48: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  47: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  46: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  45: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  44: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  43: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  42: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  41: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  40: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  39: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  38: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  37: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  36: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
+  35: { line: "C라인", detectionMethod: "자동 감지", shift: "주간", workerName: "진성훈", originalImage: "/parts/frame-normal.png", gradcamImage: "/parts/frame-normal.png" },
   247: {
     line: "B라인", detectionMethod: "자동 감지",
     shift: "야간",

@@ -4,13 +4,11 @@ import Icon from "../components/Icon";
 import FactoryFloorMap from "../components/FactoryFloorMap";
 import { USE_MOCK_API } from "../api/config";
 import { getLines } from "../api/lines";
-import { getInspection, getInspections } from "../api/inspections";
+import { getInspections } from "../api/inspections";
 import { subscribeNotifications } from "../api/notifications";
 import { applyLineAlarmNotification, linesResponseToFactoryLines, mockFactoryLineView } from "../adapters/lines";
-import { inspectionPageResponseToHistoryPage, inspectionResponseToDetail } from "../adapters/inspections";
-import { inspectionDetails, recentDetections } from "../data/mockData";
-
-const FALLBACK_DETECTION_IMAGE = "/parts/frame-normal.png";
+import { inspectionPageResponseToHistoryPage } from "../adapters/inspections";
+import { recentDetections } from "../data/mockData";
 
 function isDefectDetection(det) {
   const status = String(det.status || "").toLowerCase();
@@ -48,21 +46,15 @@ function inspectionRowsToDetections(rows) {
     line: row.line || "-",
     part: row.part || "불량",
     status: row.status,
-    image: row.image || "",
   }));
 }
 
-function mockDetectionsWithInspectionImages() {
-  return recentDetections.map((det) => {
-    const detail = det.inspectionId ? inspectionDetails[det.inspectionId] : null;
-
-    return {
-      ...det,
-      id: det.inspectionId,
-      line: det.line || detail?.line || "-",
-      image: det.inspectionId ? detail?.originalImage || "" : det.image,
-    };
-  });
+function mockDetectionsFromRecentDetections() {
+  return recentDetections.map((det) => ({
+    ...det,
+    id: det.inspectionId,
+    line: det.line || "-",
+  }));
 }
 
 function getRecentDefectDetections(detections) {
@@ -70,6 +62,10 @@ function getRecentDefectDetections(detections) {
     .filter(isDefectDetection)
     .sort((a, b) => detectionTimeValue(b) - detectionTimeValue(a))
     .slice(0, 5);
+}
+
+function detectionMetaText(det) {
+  return [det.time, det.line].filter((item) => item && item !== "-").join(" | ") || "-";
 }
 
 function DetectionStrip({ detections, compact = false }) {
@@ -95,23 +91,16 @@ function DetectionStrip({ detections, compact = false }) {
         {visibleDetections.map((det, index) => (
           <div
             key={`${det.id || det.time}-${index}`}
-            className={`rounded-lg border border-outline-variant/20 bg-white shadow-sm ${compact ? "p-2" : "p-3"}`}
+            className={`rounded-lg border border-outline-variant/20 bg-white shadow-sm ${compact ? "p-2 px-3" : "p-3"}`}
           >
-            <div className="flex items-center gap-3">
-              <div className={`relative flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-highest ${compact ? "h-11 w-11" : "h-14 w-14"}`}>
-                <img className="h-full w-full object-cover" src={det.image || FALLBACK_DETECTION_IMAGE} alt={det.part} />
-                <div className="absolute inset-0 bg-error/15" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <span className="truncate text-[11px] font-bold text-on-surface-variant">
-                    {detectionMetaText(det)}
-                  </span>
-                  <span className="rounded bg-error/10 px-1.5 py-0.5 text-[10px] font-black text-error">
-                    불량
-                  </span>
-                </div>
-                <p className="truncate text-sm font-extrabold text-on-surface">{det.part}</p>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1 flex items-center gap-2">
+                <span className="rounded bg-error/10 px-2 py-1 text-xs font-black text-error">
+                  불량
+                </span>
+                <span className="truncate text-sm font-bold text-on-surface">
+                  {detectionMetaText(det)}
+                </span>
               </div>
             </div>
           </div>
@@ -126,14 +115,10 @@ function DetectionStrip({ detections, compact = false }) {
   );
 }
 
-function detectionMetaText(det) {
-  return [det.time, det.line].filter((item) => item && item !== "-").join(" | ") || "-";
-}
-
 export default function MonitoringPage() {
   const navigate = useNavigate();
   const [lines, setLines] = useState(() => (USE_MOCK_API ? mockFactoryLineView() : []));
-  const [detections, setDetections] = useState(() => (USE_MOCK_API ? mockDetectionsWithInspectionImages() : []));
+  const [detections, setDetections] = useState(() => (USE_MOCK_API ? mockDetectionsFromRecentDetections() : []));
   const linesRef = useRef(lines);
   const [apiError, setApiError] = useState("");
 
@@ -168,39 +153,14 @@ export default function MonitoringPage() {
     let ignore = false;
 
     getInspections({ page: 0, size: 50, status: "DONE" })
-      .then(async (data) => {
+      .then((data) => {
         if (ignore) return;
 
         const pageData = inspectionPageResponseToHistoryPage(data, {
           number: 0,
           size: 50,
         });
-        const nextDetections = inspectionRowsToDetections(pageData.rows);
-        const recentDefects = getRecentDefectDetections(nextDetections);
-        const missingImageDefects = recentDefects.filter((det) => det.id && !det.image);
-
-        if (!missingImageDefects.length) {
-          setDetections(nextDetections);
-          return;
-        }
-
-        const imageEntries = await Promise.all(
-          missingImageDefects.map((det) =>
-            getInspection(det.id)
-              .then((detail) => [det.id, inspectionResponseToDetail(detail).originalImage])
-              .catch(() => null)
-          )
-        );
-        if (ignore) return;
-
-        const imageByInspectionId = new Map(imageEntries.filter(Boolean));
-        setDetections(
-          nextDetections.map((det) =>
-            imageByInspectionId.has(det.id)
-              ? { ...det, image: imageByInspectionId.get(det.id) }
-              : det
-          )
-        );
+        setDetections(inspectionRowsToDetections(pageData.rows));
       })
       .catch((err) => {
         if (!ignore) {

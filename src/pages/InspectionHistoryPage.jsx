@@ -296,7 +296,7 @@ function actionStatusLabel(actionStatus) {
 function actionStatusClassName(actionStatus) {
   return actionStatus === "UNRESOLVED" || actionStatus === "defect"
     ? "bg-error-container text-on-error-container"
-    : "bg-green-100 text-green-700";
+    : "bg-blue-100 text-blue-700";
 }
 
 function formatDate(value) {
