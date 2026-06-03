@@ -96,12 +96,12 @@ export default function AiAnalysisPage() {
 
     const timers = [
       ...analysisPatterns.map((_, index) =>
-        setTimeout(() => setVisiblePatterns(index + 1), 700 + index * 620)
+        setTimeout(() => setVisiblePatterns(index + 1), 200 + index * 220)
       ),
       ...analysisRecommendations.map((_, index) =>
         setTimeout(
           () => setVisibleRecommendations(index + 1),
-          3000 + index * 540
+          900 + index * 220
         )
       ),
     ];
@@ -271,7 +271,7 @@ export default function AiAnalysisPage() {
             {analysisPatterns.map((pattern, index) => (
               <article
                 key={pattern.title}
-                className={`rounded-xl border bg-surface-container-lowest p-6 shadow-sm transition-all duration-500 ${
+                className={`rounded-xl border bg-surface-container-lowest p-6 shadow-sm transition-all duration-300 ${
                   index < visiblePatterns
                     ? "translate-y-0 opacity-100"
                     : "translate-y-5 opacity-0"
@@ -309,7 +309,7 @@ export default function AiAnalysisPage() {
             {analysisRecommendations.map((recommendation, index) => (
               <article
                 key={recommendation.num}
-                className={`relative overflow-hidden rounded-xl border border-emerald-100 bg-surface-container-lowest p-6 shadow-sm transition-all duration-500 ${
+                className={`relative overflow-hidden rounded-xl border border-emerald-100 bg-surface-container-lowest p-6 shadow-sm transition-all duration-300 ${
                   index < visibleRecommendations
                     ? "translate-x-0 opacity-100"
                     : "translate-x-5 opacity-0"
@@ -333,7 +333,7 @@ export default function AiAnalysisPage() {
             ))}
 
             <div
-              className={`mt-2 flex items-center justify-between rounded-lg border border-primary/10 bg-primary/5 p-4 transition-all duration-500 ${
+              className={`mt-2 flex items-center justify-between rounded-lg border border-primary/10 bg-primary/5 p-4 transition-all duration-300 ${
                 visibleRecommendations === analysisRecommendations.length
                   ? "translate-y-0 opacity-100"
                   : "translate-y-3 opacity-0"

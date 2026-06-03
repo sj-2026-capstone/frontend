@@ -77,7 +77,7 @@ mock 모드에서는 역할 선택 로그인으로 동작한다. API 모드에�
 - 알림: `GET /api/notifications`, `GET /api/notifications/unread-count`, `PATCH /api/notifications/:id/read`, `PATCH /api/notifications/read-all`을 사용한다. 전체/미확인/확인완료 탭을 제공한다.
 - 계정 관리: 계정 목록, 계정 요약, 라인, 교대조를 함께 조회한다. 계정 생성 폼은 필수값, 비밀번호 8자 이상, 비밀번호 확인, 작업자 라인/교대조 선택을 검증한다.
 - 계정 생성: `POST /api/admin/accounts`에 `userName`, `loginId`, `email`, `phone`, `password`, `confirmPassword`, `role`, `lineId`, `shiftId`를 보낸다. `GET /api/admin/accounts/login-id/availability?loginId=...`로 loginId 중복 확인을 수행한다.
-- AI 공정 분석: 현재는 `src/data/mockData.js`의 분석 패턴과 추천 조치 데이터를 사용한다.
+- AI 공정 분석: 현재는 `src/data/mockData.js`의 분석 패턴과 추천 조치 데이터를 사용한다. 분석 완료 후 주요 패턴과 추천 조치 사항은 빠른 순차 애니메이션으로 표시한다.
 
 API 실패 시 앱 전체가 흰 화면으로 죽지 않도록, 연결된 화면 상단에 오류 메시지를 표시한다. 화면에 따라 API 모드에서는 빈 목록을 표시하거나, mock 모드에서만 mock 데이터를 사용한다.
 
