@@ -3,51 +3,53 @@ import Icon from "../components/Icon";
 
 const analysisPatterns = [
   {
-    title: "야간 교대조 A라인 불량 집중",
+    title: "A라인 야간조 00~02시 불량 집중",
     severity: "높음",
     severityClass: "bg-error/10 text-error border-error/20",
     metric: "3.2배",
-    desc: "22:00~02:00 구간의 도어 패널 검사에서 불량 감지 빈도가 주간 평균 대비 크게 증가했습니다.",
-    signal: "야간 조명 편차, 작업자 피로도, 카메라 노출값이 함께 영향을 준 것으로 추정됩니다.",
+    desc: "최근 7일 기준 A라인 야간조의 00:00~02:00 구간에서 도어 패널 위치 편차와 힌지 체결 불량이 주간 평균 대비 크게 증가했습니다.",
+    signal: "라인=A, 시간대=00~02시, 교대조=야간조가 함께 겹칠 때 불량 발생률이 가장 높게 나타납니다.",
   },
   {
-    title: "월요일 오전 A라인 불량률 상승",
+    title: "C라인 카울커버 체결 불량 증가",
     severity: "주의",
     severityClass: "bg-amber-50 text-amber-700 border-amber-200",
     metric: "1.8배",
-    desc: "매주 월요일 08:00~12:00 사이 A라인에서 표면 스크래치와 정렬 편차가 반복적으로 증가했습니다.",
-    signal: "주말 이후 장비 워밍업과 첫 생산 배치 검수 절차를 함께 점검해야 합니다.",
+    desc: "최근 7일 기준 C라인에서 카울커버 고정핀 미삽입, 체결 토크 부족, 장착부 단차 불량이 평균 대비 반복적으로 증가했습니다.",
+    signal: "부품=카울커버, 라인=C, 교대조=주간조 조건에서 체결 계열 불량 비중이 가장 높게 나타납니다.",
   },
   {
-    title: "C라인 감지 편차 완만한 증가",
+    title: "B라인 교대 전후 30분 정렬 불량 증가",
     severity: "관찰",
     severityClass: "bg-slate-100 text-slate-600 border-slate-200",
-    metric: "15%",
-    desc: "최근 2주간 C라인 프레임 검사에서 정상/불량 경계값 근처의 판정 편차가 점진적으로 늘었습니다.",
-    signal: "센서 보정 주기와 카메라 렌즈 오염 가능성을 확인하는 것이 좋습니다.",
+    metric: "+15%",
+    desc: "B라인 주야 교대 전후 30분 동안 범퍼와 헤드램프 장착 정렬 불량이 완만하게 증가하고 있습니다.",
+    signal: "인수인계 시간대의 작업 표준 확인 누락과 부품 투입 순서 변동이 같이 나타납니다.",
   },
 ];
 
 const analysisRecommendations = [
   {
     num: 1,
-    title: "야간 A라인 작업 환경 점검",
-    desc: "조명 밝기, 카메라 노출값, 작업 동선을 재점검하고 00시 이후 집중도 저하 구간에 짧은 장비 재확인 절차를 추가하세요.",
+    title: "A라인 야간조 00시 품질 게이트 신설",
+    desc: "00:00 전후 도어 패널 10대 샘플을 치수 측정 대상으로 지정하고, 힌지 체결 토크와 기준핀 마모 상태를 확인한 뒤 라인 리더 승인 전까지 해당 로트 출하를 보류하세요.",
   },
   {
     num: 2,
-    title: "월요일 첫 생산 전 사전 점검",
-    desc: "월요일 첫 1시간 동안 시험 생산 샘플을 우선 검수하고, 주말 이후 장비 온도와 고정 지그 상태를 기록하세요.",
+    title: "C라인 카울커버 장착 공정 집중 점검",
+    desc: "카울커버 고정핀 삽입 상태, 체결 토크, 장착부 단차를 작업자 확인 항목으로 추가하고 불량 발생 로트는 재작업 구역으로 분리하세요. 동일 불량이 반복되면 고정 지그와 체결 공구를 설비보전 점검 대상으로 등록하세요.",
   },
   {
     num: 3,
-    title: "C라인 센서 및 렌즈 보정",
-    desc: "C라인 검사 카메라의 렌즈 오염, 초점, 센서 보정값을 확인하고 경계 판정 샘플을 재학습 후보로 분류하세요.",
+    title: "B라인 교대 인수인계 체크리스트 표준화",
+    desc: "교대 전후 30분 동안 범퍼와 헤드램프 장착 기준점, 토크 렌치 캘리브레이션, 부품 투입 순서를 2인 확인 항목으로 관리하고 불량 발생 로트는 즉시 격리 후 재검하세요.",
   },
 ];
 
-const processingSteps = [
-  "최근 7일 검사 이력 수집",
+const analysisPeriodOptions = ["7일", "14일", "30일"];
+const DEFAULT_LLM_MODEL = "gpt-5-mini-2025-08-07";
+
+const processingStepSuffixes = [
   "라인/교대조별 불량 상관관계 계산",
   "반복 패턴 신뢰도 검증",
   "추천 조치 우선순위 산정",
@@ -60,10 +62,16 @@ export default function AiAnalysisPage() {
   const [activeStep, setActiveStep] = useState(0);
   const [visiblePatterns, setVisiblePatterns] = useState(0);
   const [visibleRecommendations, setVisibleRecommendations] = useState(0);
+  const [analysisPeriod, setAnalysisPeriod] = useState("7일");
+  const [openParameterMenu, setOpenParameterMenu] = useState(null);
 
   const isProcessing = analysisState === "processing";
   const hasResults = analysisState === "done";
   const progress = isProcessing ? progressByStep[activeStep] : hasResults ? 100 : 0;
+  const processingSteps = useMemo(
+    () => [`최근 ${analysisPeriod} 검사 이력 수집`, ...processingStepSuffixes],
+    [analysisPeriod]
+  );
 
   const lastUpdatedAt = useMemo(
     () =>
@@ -134,9 +142,17 @@ export default function AiAnalysisPage() {
             <h2 className="font-headline text-3xl font-extrabold tracking-tight md:text-4xl">
               AI 공정 분석
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-blue-100/80 md:text-base">
-              최근 검사 데이터를 기반으로 반복 불량 패턴을 찾고, 현장에서 바로 실행할 수 있는 개선 조치를 도출합니다.
-            </p>
+            <div className="mt-4 max-w-xs">
+              <AnalysisParameterDropdown
+                label="기간"
+                value={analysisPeriod}
+                options={analysisPeriodOptions}
+                open={openParameterMenu === "period"}
+                onToggle={() => setOpenParameterMenu(openParameterMenu === "period" ? null : "period")}
+                onClose={() => setOpenParameterMenu(null)}
+                onSelect={setAnalysisPeriod}
+              />
+            </div>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
@@ -154,7 +170,7 @@ export default function AiAnalysisPage() {
               </button>
 
               <div className="text-xs font-bold text-blue-100/60">
-                최근 7일 데이터 기준 · 예상 소요 15초
+                최근 {analysisPeriod} 데이터 기준 · {DEFAULT_LLM_MODEL} · 예상 소요 15초
               </div>
             </div>
           </div>
@@ -351,6 +367,77 @@ export default function AiAnalysisPage() {
               </button>
             </div>
           </section>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AnalysisParameterDropdown({
+  label,
+  value,
+  options,
+  open,
+  onToggle,
+  onClose,
+  onSelect,
+}) {
+  return (
+    <div
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          onClose();
+        }
+      }}
+    >
+      <span className="mb-1.5 block text-[10px] font-black uppercase tracking-widest text-cyan-100/70">
+        {label}
+      </span>
+      <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/10 px-3 py-3 text-left text-sm font-extrabold text-white backdrop-blur-md transition-all hover:bg-white/15 focus:ring-2 focus:ring-cyan-200"
+        onClick={onToggle}
+      >
+        <span className="min-w-0 truncate">
+          {value}
+        </span>
+        <Icon name={open ? "expand_less" : "expand_more"} className="text-lg text-cyan-100/80" />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-64 overflow-y-auto rounded-xl border border-white/10 bg-white p-1 shadow-xl"
+        >
+          {options.map((option) => {
+            const selected = value === option;
+
+            return (
+              <button
+                key={option}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors ${
+                  selected
+                    ? "bg-primary text-white"
+                    : "text-[#022448] hover:bg-surface-container-high"
+                }`}
+                onClick={() => {
+                  onSelect(option);
+                  onClose();
+                }}
+              >
+                <span className="min-w-0 truncate">
+                  {option}
+                </span>
+                {selected && <Icon name="check" className="text-sm" />}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

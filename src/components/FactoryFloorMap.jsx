@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 
+const ALARM_STILL_IMAGE = "/defects/defect-original.jpg";
+
 const cctvImages = (group, count = 10) =>
   Array.from({ length: count }, (_, index) => `/cctv/${group}/${String(index + 1).padStart(2, "0")}.jpg`);
 
 const feedTemplates = [
   {
-    id: "LINE-A",
+    id: "CAM-1",
     lineId: "A",
     title: "도어 검사",
     location: "A라인 도어 검사",
@@ -13,11 +15,11 @@ const feedTemplates = [
     fps: 30,
     resolution: "1920x1080",
     part: "도어",
-    fallbackInspectionId: 247,
+    fallbackInspectionId: 50,
     offset: 0,
   },
   {
-    id: "LINE-B",
+    id: "CAM-2",
     lineId: "B",
     title: "범퍼 검사",
     location: "B라인 범퍼 검사",
@@ -28,7 +30,7 @@ const feedTemplates = [
     offset: 1,
   },
   {
-    id: "LINE-C",
+    id: "CAM-3",
     lineId: "C",
     title: "프레임 검사",
     location: "C라인 프레임 검사",
@@ -85,6 +87,13 @@ function buildFeeds(lines, liveClock, frameSlot) {
     const status = line?.status || "normal";
     const copy = statusCopy[status] || statusCopy.normal;
     const images = template.images || [];
+    const alarm = status === "alarm";
+    const previewFrameSlot = Number(line?.previewFrameSlot);
+    const previewImage =
+      line?.previewImage && Number.isFinite(previewFrameSlot) && frameSlot >= previewFrameSlot
+        ? line.previewImage
+        : "";
+    const imageOverride = line?.image || previewImage;
     const imageIndex = images.length ? (frameSlot + template.offset) % images.length : 0;
 
     return {
@@ -92,13 +101,13 @@ function buildFeeds(lines, liveClock, frameSlot) {
       line,
       copy,
       status,
-      alarm: status === "alarm",
+      alarm,
       inspectionId: line?.inspectionId || template.fallbackInspectionId || null,
       defectCount: Number(line?.defectCount || 0),
       time: line?.lastEventAt || liveClock,
-      image: images[imageIndex],
-      frameNo: imageIndex + 1,
-      frameTotal: images.length,
+      image: imageOverride || (alarm ? ALARM_STILL_IMAGE : images[imageIndex]),
+      frameNo: alarm || imageOverride ? 1 : imageIndex + 1,
+      frameTotal: alarm || imageOverride ? 1 : images.length,
     };
   });
 }
@@ -111,23 +120,8 @@ function FeedBadge({ feed }) {
         {feed.copy.live}
       </span>
       <span className="truncate rounded bg-black/70 px-2 py-1 text-[10px] font-black text-white shadow-sm">
-        {feed.id} {feed.title}
+        {feed.id}
       </span>
-    </div>
-  );
-}
-
-function FeedMeta({ feed }) {
-  return (
-    <div className="absolute inset-x-3 bottom-3 z-20 flex items-end justify-between gap-3 text-[9px] font-black uppercase tracking-wide text-white/75">
-      <div className="min-w-0">
-        <span>FPS: {feed.fps}</span>
-        <span className="ml-2">해상도: {feed.resolution}</span>
-        <span className="ml-2">FRAME: {feed.frameNo}/{feed.frameTotal}</span>
-      </div>
-      <div className={`shrink-0 ${feed.alarm ? "text-red-100" : "text-emerald-300"}`}>
-        {feed.alarm ? feed.time : feed.copy.status}
-      </div>
     </div>
   );
 }
@@ -153,8 +147,18 @@ function CameraFeedCard({ feed, onSelect }) {
       <div className="cctv-video-noise absolute inset-0" />
       <div className="cctv-scanlines absolute inset-0" />
 
+      {feed.alarm && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-4">
+          <div className="flex items-center gap-2 rounded bg-red-600/95 px-4 py-2 text-sm font-black text-white shadow-lg">
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              warning
+            </span>
+            <span>불량 감지</span>
+          </div>
+        </div>
+      )}
+
       <FeedBadge feed={feed} />
-      <FeedMeta feed={feed} />
 
       {clickable && (
         <div className="pointer-events-none absolute right-3 top-3 z-20 rounded bg-red-600/90 px-2 py-1 text-[10px] font-black text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
@@ -165,8 +169,10 @@ function CameraFeedCard({ feed, onSelect }) {
   );
 }
 
-export default function FactoryFloorMap({ lines, onLineSelect, children }) {
+export default function FactoryFloorMap({ lines, onLineSelect, children, timelineStartedAt }) {
   const [now, setNow] = useState(() => new Date());
+  const [defaultStartedAt] = useState(() => Date.now());
+  const startedAt = timelineStartedAt || defaultStartedAt;
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -174,8 +180,7 @@ export default function FactoryFloorMap({ lines, onLineSelect, children }) {
   }, []);
 
   useEffect(() => {
-    feedTemplates
-      .flatMap((feed) => feed.images)
+    [...feedTemplates.flatMap((feed) => feed.images), ALARM_STILL_IMAGE]
       .forEach((src) => {
         const image = new Image();
         image.src = src;
@@ -183,7 +188,7 @@ export default function FactoryFloorMap({ lines, onLineSelect, children }) {
   }, []);
 
   const liveClock = getLiveClock(now);
-  const frameSlot = Math.floor(now.getTime() / 3000);
+  const frameSlot = Math.max(0, Math.floor((now.getTime() - startedAt) / 3000));
   const feeds = useMemo(() => buildFeeds(lines, liveClock, frameSlot), [lines, liveClock, frameSlot]);
   const hasAlarm = feeds.some((feed) => feed.alarm);
 
@@ -192,14 +197,14 @@ export default function FactoryFloorMap({ lines, onLineSelect, children }) {
       className={`cctv-monitor-shell rounded-xl border p-3 shadow-sm ${
         hasAlarm ? "border-error ring-4 ring-error/20 active-pulse" : "border-outline-variant/30"
       }`}
-      aria-label="실시간 검사 영상 모니터링"
+      aria-label="C 라인 / 진성훈 모니터링"
     >
       <div className="mb-3 flex items-center justify-between gap-3 px-1">
         <div>
           <p className="text-[11px] font-black uppercase tracking-[0.24em] text-primary/60">
             Inspection Live Feed
           </p>
-          <h2 className="mt-0.5 text-base font-black text-primary">실시간 검사 영상</h2>
+          <h2 className="mt-0.5 text-base font-black text-primary">C 라인 / 진성훈</h2>
         </div>
         <div className="rounded bg-black/80 px-2.5 py-1.5 font-mono text-[11px] font-black text-emerald-300">
           {liveClock}

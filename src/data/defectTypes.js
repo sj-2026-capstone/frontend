@@ -12,4 +12,5 @@ export const DEFECT_TYPE_OPTIONS = [
   { value: "헤밍", label: "헤밍" },
   { value: "홀", label: "홀" },
   { value: "외관 손상", label: "외관 손상" },
+  { value: "기타", label: "기타" },
 ];

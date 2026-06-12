@@ -212,7 +212,6 @@ body {
   .factory-alarm-dot,
   .cctv-feed-card,
   .cctv-live-dot,
-  .cctv-video-image,
   .analysis-buffer--active,
   .animate-status-pulse,
   .animate-slide-in,
@@ -260,15 +259,6 @@ body {
   border-color: rgba(245, 158, 11, 0.46);
 }
 
-.cctv-video-image {
-  animation: cctv-drift 9s ease-in-out infinite alternate;
-  transform: scale(1.035);
-}
-
-.cctv-feed-card--alarm .cctv-video-image {
-  transform: scale(1.08);
-}
-
 .cctv-video-vignette {
   background:
     radial-gradient(circle at 50% 45%, transparent 42%, rgba(0, 0, 0, 0.32) 100%),
@@ -313,7 +303,7 @@ body {
 }
 
 .cctv-live-badge--wait {
-  background: #f59e0b;
+  background: #10b981;
 }
 
 .cctv-live-badge--alarm {
@@ -326,15 +316,6 @@ body {
   border-radius: 9999px;
   background: currentColor;
   animation: cctv-live-pulse 1.1s ease-in-out infinite;
-}
-
-@keyframes cctv-drift {
-  from {
-    transform: scale(1.035) translate3d(-0.6%, -0.4%, 0);
-  }
-  to {
-    transform: scale(1.08) translate3d(0.8%, 0.5%, 0);
-  }
 }
 
 @keyframes cctv-live-pulse {

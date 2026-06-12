@@ -17,6 +17,7 @@ export default function InspectionDetailPage() {
   const [apiError, setApiError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedDefectType, setSelectedDefectType] = useState("");
+  const [defectTypeMenuOpen, setDefectTypeMenuOpen] = useState(false);
   const [imageSources, setImageSources] = useState({
     originalImageUrl: "",
     gradcamImageUrl: "",
@@ -74,6 +75,7 @@ export default function InspectionDetailPage() {
     setConfirmed(false);
     setCancelled(false);
     setApiError("");
+    setDefectTypeMenuOpen(false);
   }, [id]);
 
   useEffect(() => {
@@ -146,6 +148,7 @@ export default function InspectionDetailPage() {
     inspection.actionStatus === "RESOLVED";
   const isResolved = (confirmed || inspection.actionStatus === "RESOLVED" || inspection.status === "resolved") && !cancelled;
   const effectivelyDefect = isDefect && !isResolved;
+  const defectTypeMenuDisabled = actionLoading || isResolved;
   const resultText = isDefect || isResolved ? "불량 감지" : "이상 없음";
 
   const handleSubmitDefectReport = async () => {
@@ -155,6 +158,8 @@ export default function InspectionDetailPage() {
       setApiError("불량 유형을 선택해 주세요.");
       return;
     }
+
+    setDefectTypeMenuOpen(false);
 
     if (USE_MOCK_API) {
       setConfirmed(true);
@@ -190,6 +195,11 @@ export default function InspectionDetailPage() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleSelectDefectType = (value) => {
+    setSelectedDefectType(value);
+    setDefectTypeMenuOpen(false);
   };
 
   return (
@@ -323,20 +333,59 @@ export default function InspectionDetailPage() {
               <label className="text-xs font-bold uppercase tracking-wider text-outline" htmlFor="defectType">
                 불량 유형
               </label>
-              <select
-                id="defectType"
-                className="w-full rounded-lg border-none bg-surface-container-highest px-4 py-3 text-sm font-bold text-[#022448] transition-all focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-70"
-                value={selectedDefectType}
-                disabled={actionLoading || isResolved}
-                onChange={(event) => setSelectedDefectType(event.target.value)}
+              <div
+                className="relative"
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setDefectTypeMenuOpen(false);
+                  }
+                }}
               >
-                <option value="">불량 유형 선택</option>
-                {DEFECT_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                <button
+                  id="defectType"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={defectTypeMenuOpen}
+                  disabled={defectTypeMenuDisabled}
+                  className="flex w-full items-center justify-between gap-3 rounded-lg border-none bg-surface-container-highest px-4 py-3 text-left text-sm font-bold text-[#022448] transition-all focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-70"
+                  onClick={() => setDefectTypeMenuOpen((open) => !open)}
+                >
+                  <span className={selectedDefectType ? "" : "text-on-surface-variant"}>
+                    {selectedDefectType || "불량 유형 선택"}
+                  </span>
+                  <Icon name={defectTypeMenuOpen ? "expand_less" : "expand_more"} className="text-lg text-on-surface-variant" />
+                </button>
+
+                {defectTypeMenuOpen && !defectTypeMenuDisabled && (
+                  <div
+                    role="listbox"
+                    aria-labelledby="defectType"
+                    className="absolute bottom-[calc(100%+0.5rem)] left-0 right-0 z-30 max-h-72 overflow-y-auto rounded-xl border border-outline-variant bg-white p-1 shadow-xl"
+                  >
+                    {DEFECT_TYPE_OPTIONS.map((option) => {
+                      const selected = selectedDefectType === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          role="option"
+                          aria-selected={selected}
+                          className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold transition-colors ${
+                            selected
+                              ? "bg-primary text-white"
+                              : "text-[#022448] hover:bg-surface-container-high"
+                          }`}
+                          onClick={() => handleSelectDefectType(option.value)}
+                        >
+                          <span>{option.label}</span>
+                          {selected && <Icon name="check" className="text-sm" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
 
             <button

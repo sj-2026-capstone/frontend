@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "../components/Icon";
 import FactoryFloorMap from "../components/FactoryFloorMap";
@@ -9,6 +9,11 @@ import { subscribeNotifications } from "../api/notifications";
 import { applyLineAlarmNotification, linesResponseToFactoryLines, mockFactoryLineView } from "../adapters/lines";
 import { inspectionPageResponseToHistoryPage } from "../adapters/inspections";
 import { recentDetections } from "../data/mockData";
+
+const MOCK_DEFECT_IMAGE = "/defects/defect-original.jpg";
+const MOCK_DEFECT_IMAGE_FRAME_SLOT = 3;
+const MOCK_ALARM_DELAY_MS = 10000;
+const MOCK_PHASE_INTERVAL_MS = 100;
 
 function isDefectDetection(det) {
   const status = String(det.status || "").toLowerCase();
@@ -55,6 +60,26 @@ function mockDetectionsFromRecentDetections() {
     id: det.inspectionId,
     line: det.line || "-",
   }));
+}
+
+function mockLinesBeforeAlarm() {
+  return mockFactoryLineView().map((line) =>
+    line.id === "A"
+      ? {
+          ...line,
+          status: "normal",
+          inspectionId: null,
+          defectCount: 0,
+          previewImage: MOCK_DEFECT_IMAGE,
+          previewFrameSlot: MOCK_DEFECT_IMAGE_FRAME_SLOT,
+        }
+      : line
+  );
+}
+
+function mockLinesForPhase(phase) {
+  if (phase === "alarm") return mockFactoryLineView();
+  return mockLinesBeforeAlarm();
 }
 
 function getRecentDefectDetections(detections) {
@@ -117,14 +142,43 @@ function DetectionStrip({ detections, compact = false }) {
 
 export default function MonitoringPage() {
   const navigate = useNavigate();
-  const [lines, setLines] = useState(() => (USE_MOCK_API ? mockFactoryLineView() : []));
-  const [detections, setDetections] = useState(() => (USE_MOCK_API ? mockDetectionsFromRecentDetections() : []));
+  const [timelineStartedAt] = useState(() => Date.now());
+  const [mockPhase, setMockPhase] = useState("normal");
+  const [lines, setLines] = useState([]);
+  const [detections, setDetections] = useState([]);
+  const displayLines = useMemo(
+    () => (USE_MOCK_API ? mockLinesForPhase(mockPhase) : lines),
+    [mockPhase, lines]
+  );
+  const displayDetections = useMemo(
+    () => (USE_MOCK_API ? (mockPhase === "alarm" ? mockDetectionsFromRecentDetections() : []) : detections),
+    [mockPhase, detections]
+  );
   const linesRef = useRef(lines);
   const [apiError, setApiError] = useState("");
 
   useEffect(() => {
-    linesRef.current = lines;
-  }, [lines]);
+    linesRef.current = displayLines;
+  }, [displayLines]);
+
+  useEffect(() => {
+    if (!USE_MOCK_API) return undefined;
+
+    const updateMockPhase = () => {
+      const elapsedMs = Date.now() - timelineStartedAt;
+
+      setMockPhase(
+        elapsedMs >= MOCK_ALARM_DELAY_MS
+          ? "alarm"
+          : "normal"
+      );
+    };
+
+    updateMockPhase();
+    const timer = window.setInterval(updateMockPhase, MOCK_PHASE_INTERVAL_MS);
+
+    return () => window.clearInterval(timer);
+  }, [timelineStartedAt]);
 
   useEffect(() => {
     if (USE_MOCK_API) return;
@@ -231,8 +285,8 @@ export default function MonitoringPage() {
         </div>
       )}
 
-      <FactoryFloorMap lines={lines} onLineSelect={handleLineSelect}>
-        <DetectionStrip detections={detections} compact />
+      <FactoryFloorMap lines={displayLines} onLineSelect={handleLineSelect} timelineStartedAt={timelineStartedAt}>
+        <DetectionStrip detections={displayDetections} compact />
       </FactoryFloorMap>
     </div>
   );

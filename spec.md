@@ -77,7 +77,7 @@ mock 모드에서는 역할 선택 로그인으로 동작한다. API 모드에�
 - 알림: `GET /api/notifications`, `GET /api/notifications/unread-count`, `PATCH /api/notifications/:id/read`, `PATCH /api/notifications/read-all`을 사용한다. 전체/미확인/확인완료 탭을 제공한다.
 - 계정 관리: 계정 목록, 계정 요약, 라인, 교대조를 함께 조회한다. 계정 생성 폼은 필수값, 비밀번호 8자 이상, 비밀번호 확인, 작업자 라인/교대조 선택을 검증한다.
 - 계정 생성: `POST /api/admin/accounts`에 `userName`, `loginId`, `email`, `phone`, `password`, `confirmPassword`, `role`, `lineId`, `shiftId`를 보낸다. `GET /api/admin/accounts/login-id/availability?loginId=...`로 loginId 중복 확인을 수행한다.
-- AI 공정 분석: 현재는 `src/data/mockData.js`의 분석 패턴과 추천 조치 데이터를 사용한다. 분석 완료 후 주요 패턴과 추천 조치 사항은 빠른 순차 애니메이션으로 표시한다.
+- AI 공정 분석: 현재는 `src/data/mockData.js`의 분석 패턴과 추천 조치 데이터를 사용한다. 분석 완료 후 주요 패턴과 추천 조치 사항은 빠른 순차 애니메이션으로 표시한다. 주요 패턴은 라인, 시간대, 교대조, 부품별 불량 증가 조합 중심으로 표시하고, 추천 조치 문구는 해당 패턴에 맞춘 품질 게이트, 부품 장착 공정 점검, 교대 인수인계 표준화, 설비보전 작업지시 중심으로 표시한다. 분석 시작 영역에는 기간을 선택하는 인페이지 커스텀 드롭다운이 있으며 기본값은 `7일`이다. LLM 모델 `gpt-5-mini-2025-08-07`은 분석 버튼 아래 설명 문구에 고정 표시한다.
 
 API 실패 시 앱 전체가 흰 화면으로 죽지 않도록, 연결된 화면 상단에 오류 메시지를 표시한다. 화면에 따라 API 모드에서는 빈 목록을 표시하거나, mock 모드에서만 mock 데이터를 사용한다.
 
@@ -103,11 +103,21 @@ API 실패 시 앱 전체가 흰 화면으로 죽지 않도록, 연결된 화면
 - Inspection detail backend-origin images are loaded through `apiBlobRequest` before rendering so requests can include `ngrok-skip-browser-warning: true`.
 - The detail page renders object URLs for fetched images and falls back to the original URL if the Blob load fails.
 - Monitoring camera mode uses local image sequences under `public/cctv/door`, `public/cctv/bumper`, and `public/cctv/frame`; `FactoryFloorMap` rotates frames every few seconds and applies alarm styling/click-through when a line is in alarm state.
+- Monitoring CCTV frame rotation is based on elapsed time after the monitoring view mounts, so frames advance on the page-local 3, 6, 9 second boundaries.
+- Monitoring camera feeds no longer apply slow zoom/drift animation. Alarm feeds show a centered `불량 감지` banner on the CCTV image, and the mock/standby LIVE badge uses green instead of yellow.
+- Monitoring alarm camera feeds freeze on `/defects/defect-original.jpg` instead of rotating CCTV sequence frames. In mock mode, clicking the alarm feed opens `/inspection/50`, whose original and Grad-CAM images are `/defects/defect-original.jpg` and `/defects/defect-gradcam.jpg`.
+- In mock monitoring, LINE A starts as a normal rotating CCTV feed, shows the defect image on the third 3-second frame slot (9 seconds) without alarm styling, then switches to alarm at 10 seconds and links to `/inspection/50`.
+- Monitoring camera cards display only `CAM-1`, `CAM-2`, and `CAM-3` labels instead of `LINE-A`, `LINE-B`, and `LINE-C` plus inspection names; the monitoring panel title is `C 라인 / 진성훈`.
+- Monitoring camera cards hide bottom technical metadata such as FPS, resolution, frame count, status, and timestamp.
+- Mock monitoring recent defect detection for inspection `50` displays the same timestamp as `/inspection/50` and uses `C라인`.
+- Mock dashboard action status shows total defects `18`, unresolved `5`, and resolved `13`. Mock account names replace `대풍근`, `김은지`, and `김근호` with `홍길동`, `김철수`, and `김영희`.
 - API 모드에서 `POST /api/auth/login` 후 토큰 저장 및 역할별 이동
 - `/api/lines`, `/api/inspections`, `/api/notifications/subscribe`, `/api/dashboard`, `/api/admin/accounts`, `/api/shifts` 호출
 - Field worker real-time defect notification flow has been manually confirmed.
 - Admin dashboard subscribes to the same notification SSE and shows a top defect alert panel when a defect notification is received. The old manual alert demo button has been removed.
 - Monitoring recent defect detections use inspection image URLs instead of a hard-coded mock thumbnail. If the list response does not include an image, the page fetches the recent defect inspection details and uses the same original image shown on `/inspection/:id`; mock mode also links defect detections to `inspectionDetails[inspectionId].originalImage`.
-- Inspection detail defect reports use defect type options collected from `C:\Users\dydwn\Desktop\Capstone\차 부품 정상 불량\새 폴더` subfolder names. The current options are `스크래치`, `외관손상`, `단차`, `장착불량`, `고정핀`, `연계`, `유격`, `체결`, `실링`, `외관`, `헤밍`, `홀`, `외관 손상`.
+- Mock inspection history marks only inspection numbers `50` and `47` as `UNRESOLVED`. Mock rows with normal results leave action status blank; other non-normal mock history rows are marked `RESOLVED`.
+- Inspection detail defect reports use defect type options collected from `C:\Users\dydwn\Desktop\Capstone\차 부품 정상 불량\새 폴더` subfolder names. The current options are `스크래치`, `외관손상`, `단차`, `장착불량`, `고정핀`, `연계`, `유격`, `체결`, `실링`, `외관`, `헤밍`, `홀`, `외관 손상`, `기타`.
+- Inspection detail defect type selection uses an in-page custom dropdown instead of a native browser select so the opened option list is visible in screen recordings; the option list opens above the trigger.
 - Next manual verification target is the admin flow: `/dashboard`, `/accounts`, `/analysis`, `/alerts`, and shared `/history`.
 - mock 모드에서 worker/admin 로그인과 주요 화면이 기존 mock 데이터로 열리는지 확인
