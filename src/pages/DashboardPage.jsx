@@ -161,6 +161,16 @@ export default function DashboardPage() {
   const lastUpdatedAt = dashboard.lastUpdatedAt
     ? new Date(dashboard.lastUpdatedAt).toLocaleString()
     : "2024.03.23 14:00";
+  const openDefectInspection = () => {
+    if (!defectAlert?.inspectionId) return;
+    navigate(`/inspection/${defectAlert.inspectionId}`);
+  };
+  const alertPanelClassName = [
+    "mb-6 rounded-xl border border-error/20 bg-error/5 p-5 shadow-sm",
+    defectAlert?.inspectionId
+      ? "cursor-pointer transition-colors hover:border-error/40 hover:bg-error/10"
+      : "",
+  ].join(" ");
 
   return (
     <>
@@ -171,7 +181,7 @@ export default function DashboardPage() {
       )}
 
       {defectAlert && (
-        <section className="mb-6 rounded-xl border border-error/20 bg-error/5 p-5 shadow-sm">
+        <section className={alertPanelClassName} onClick={openDefectInspection}>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex gap-4">
               <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-error text-white">
@@ -192,7 +202,10 @@ export default function DashboardPage() {
               {defectAlert.inspectionId && (
                 <button
                   className="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-primary-container"
-                  onClick={() => navigate(`/inspection/${defectAlert.inspectionId}`)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    openDefectInspection();
+                  }}
                   type="button"
                 >
                   상세 보기
@@ -201,7 +214,10 @@ export default function DashboardPage() {
               <button
                 aria-label="알림 닫기"
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-on-surface-variant transition-colors hover:bg-surface-container"
-                onClick={() => setDefectAlert(null)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setDefectAlert(null);
+                }}
                 type="button"
               >
                 <Icon name="close" className="text-lg" />

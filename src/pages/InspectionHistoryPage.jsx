@@ -191,12 +191,14 @@ export default function InspectionHistoryPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button
-                      className="text-secondary font-bold text-xs hover:underline decoration-2 underline-offset-4"
-                      onClick={() => navigate(`/inspection/${row.id}`)}
-                    >
-                      상세보기
-                    </button>
+                    {row.status !== "normal" && (
+                      <button
+                        className="text-secondary font-bold text-xs hover:underline decoration-2 underline-offset-4"
+                        onClick={() => navigate(`/inspection/${row.id}`)}
+                      >
+                        상세보기
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
